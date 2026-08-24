@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: fd675c7e-97a5-40dd-885e-66364af34675
+
+cloudResources:
+  collections:
+    ../postman/collections/Merceria API: 1769592d-fddf-4663-92ef-003c7986f17f
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

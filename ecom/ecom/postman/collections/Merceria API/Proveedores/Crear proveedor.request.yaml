@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/proveedores"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Distribuidora XYZ",
+      "contacto": "011-1234-5678"
+    }
+order: 1000

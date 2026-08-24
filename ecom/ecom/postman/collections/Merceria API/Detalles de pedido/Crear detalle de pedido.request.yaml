@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/detalles-pedido"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "pedidoId": 1,
+      "productoId": 1,
+      "cantidad": 2
+    }
+order: 1000
