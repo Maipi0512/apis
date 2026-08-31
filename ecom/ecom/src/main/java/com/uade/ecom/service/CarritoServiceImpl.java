@@ -1,0 +1,120 @@
+package com.uade.ecom.service;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.uade.ecom.exception.CarritoVacioException;
+import com.uade.ecom.exception.ResourceNotFoundException;
+import com.uade.ecom.exception.StockInsuficienteException;
+import com.uade.ecom.model.Carrito;
+import com.uade.ecom.model.DetallePedido;
+import com.uade.ecom.model.ItemCarrito;
+import com.uade.ecom.model.Pedido;
+import com.uade.ecom.model.Producto;
+import com.uade.ecom.repository.CarritoRepository;
+import com.uade.ecom.repository.DetallePedidoRepository;
+import com.uade.ecom.repository.ItemCarritoRepository;
+import com.uade.ecom.repository.PedidoRepository;
+import com.uade.ecom.repository.ProductoRepository;
+
+@Service
+public class CarritoServiceImpl implements CarritoService {
+
+    @Autowired
+    private CarritoRepository carritoRepository;
+
+    @Autowired
+    private ItemCarritoRepository itemCarritoRepository;
+
+    @Autowired
+    private ProductoRepository productoRepository;
+
+    @Autowired
+    private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private DetallePedidoRepository detallePedidoRepository;
+
+    @Override
+    public List<Carrito> getAllCarritos() {
+        return carritoRepository.findAll();
+    }
+
+    @Override
+    public Carrito getCarritoById(Long id) {
+        return carritoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun carrito con id " + id));
+    }
+
+    @Override
+    public Carrito createCarrito() {
+        return carritoRepository.save(new Carrito());
+    }
+
+    @Override
+    public void deleteCarrito(Long id) {
+        Carrito carrito = carritoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun carrito con id " + id));
+        carritoRepository.delete(carrito);
+    }
+
+    @Override
+    @Transactional
+    public Pedido checkout(Long carritoId) {
+        Carrito carrito = carritoRepository.findById(carritoId)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun carrito con id " + carritoId));
+
+        List<ItemCarrito> items = itemCarritoRepository.findByCarritoId(carrito.getId());
+        if (items.isEmpty()) {
+            throw new CarritoVacioException("El carrito " + carritoId + " no tiene items para confirmar la compra");
+        }
+
+        // Primero validamos el stock de todos los items, antes de
+        // modificar nada: si uno solo no alcanza, no queremos dejar el
+        // pedido a medio armar ni haber descontado stock de otro item.
+        for (ItemCarrito item : items) {
+            Producto producto = item.getProducto();
+            if (item.getCantidad() > producto.getStock()) {
+                throw new StockInsuficienteException(
+                        "No hay stock suficiente de " + producto.getNombre()
+                                + " (pedido: " + item.getCantidad() + ", disponible: " + producto.getStock() + ")");
+            }
+        }
+
+        Pedido pedido = new Pedido();
+        pedido.setFecha(LocalDate.now());
+        pedido.setEstado("PENDIENTE");
+        pedido.setTotal(BigDecimal.ZERO);
+        pedido = pedidoRepository.save(pedido);
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (ItemCarrito item : items) {
+            Producto producto = item.getProducto();
+
+            DetallePedido detalle = new DetallePedido();
+            detalle.setPedido(pedido);
+            detalle.setProducto(producto);
+            detalle.setCantidad(item.getCantidad());
+            detalle.setPrecioUnitario(producto.getPrecio());
+            detallePedidoRepository.save(detalle);
+
+            total = total.add(producto.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
+
+            producto.setStock(producto.getStock() - item.getCantidad());
+            productoRepository.save(producto);
+        }
+
+        pedido.setTotal(total);
+        pedido = pedidoRepository.save(pedido);
+
+        // El carrito queda vacio: los items ya se convirtieron en pedido.
+        itemCarritoRepository.deleteAll(items);
+
+        return pedido;
+    }
+}

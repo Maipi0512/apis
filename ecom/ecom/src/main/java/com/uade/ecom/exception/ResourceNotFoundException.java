@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * DetallePedido, Pago, Proveedor) y tambien para cuando, al crear algo,
  * la referencia (por ejemplo categoriaId o usuarioId) no existe.
  *
- * Category tiene su propia CategoryNotFoundException porque fue la que
+ * Categoria tiene su propia CategoriaNotFoundException porque fue la que
  * armamos en la clase; el resto de las entidades nuevas reutilizan esta
  * para no repetir una clase de excepcion por cada tabla.
  */
