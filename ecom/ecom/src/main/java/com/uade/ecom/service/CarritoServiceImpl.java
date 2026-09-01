@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.uade.ecom.exception.AccesoDenegadoException;
 import com.uade.ecom.exception.CarritoVacioException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.exception.StockInsuficienteException;
@@ -16,11 +17,13 @@ import com.uade.ecom.model.DetallePedido;
 import com.uade.ecom.model.ItemCarrito;
 import com.uade.ecom.model.Pedido;
 import com.uade.ecom.model.Producto;
+import com.uade.ecom.model.Usuario;
 import com.uade.ecom.repository.CarritoRepository;
 import com.uade.ecom.repository.DetallePedidoRepository;
 import com.uade.ecom.repository.ItemCarritoRepository;
 import com.uade.ecom.repository.PedidoRepository;
 import com.uade.ecom.repository.ProductoRepository;
+import com.uade.ecom.util.SecurityUtils;
 
 @Service
 public class CarritoServiceImpl implements CarritoService {
@@ -42,25 +45,48 @@ public class CarritoServiceImpl implements CarritoService {
 
     @Override
     public List<Carrito> getAllCarritos() {
-        return carritoRepository.findAll();
+        if (SecurityUtils.esAdmin()) {
+            return carritoRepository.findAll();
+        }
+        return carritoRepository.findByUsuarioId(SecurityUtils.getUsuarioActual().getId());
     }
 
     @Override
     public Carrito getCarritoById(Long id) {
-        return carritoRepository.findById(id)
+        Carrito carrito = carritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun carrito con id " + id));
+        validarDueño(carrito);
+        return carrito;
     }
 
     @Override
     public Carrito createCarrito() {
-        return carritoRepository.save(new Carrito());
+        Carrito carrito = new Carrito();
+        carrito.setUsuario(SecurityUtils.getUsuarioActual());
+        return carritoRepository.save(carrito);
     }
 
     @Override
     public void deleteCarrito(Long id) {
         Carrito carrito = carritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun carrito con id " + id));
+        validarDueño(carrito);
         carritoRepository.delete(carrito);
+    }
+
+    /**
+     * Un CLIENTE solo puede ver/tocar sus propios carritos; un ADMIN
+     * puede con cualquiera.
+     */
+    private void validarDueño(Carrito carrito) {
+        if (SecurityUtils.esAdmin()) {
+            return;
+        }
+        Usuario actual = SecurityUtils.getUsuarioActual();
+        Usuario dueño = carrito.getUsuario();
+        if (dueño == null || !dueño.getId().equals(actual.getId())) {
+            throw new AccesoDenegadoException("El carrito " + carrito.getId() + " no pertenece al usuario autenticado");
+        }
     }
 
     @Override
@@ -68,6 +94,7 @@ public class CarritoServiceImpl implements CarritoService {
     public Pedido checkout(Long carritoId) {
         Carrito carrito = carritoRepository.findById(carritoId)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun carrito con id " + carritoId));
+        validarDueño(carrito);
 
         List<ItemCarrito> items = itemCarritoRepository.findByCarritoId(carrito.getId());
         if (items.isEmpty()) {
@@ -90,6 +117,7 @@ public class CarritoServiceImpl implements CarritoService {
         pedido.setFecha(LocalDate.now());
         pedido.setEstado("PENDIENTE");
         pedido.setTotal(BigDecimal.ZERO);
+        pedido.setUsuario(carrito.getUsuario());
         pedido = pedidoRepository.save(pedido);
 
         BigDecimal total = BigDecimal.ZERO;

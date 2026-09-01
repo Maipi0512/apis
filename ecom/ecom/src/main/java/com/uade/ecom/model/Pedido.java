@@ -8,6 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,9 +21,8 @@ import lombok.NoArgsConstructor;
  * reservada en Postgres, por eso el @Table(name = "pedido") es
  * obligatorio, no solo prolijidad.
  *
- * NOTA: por ahora NO tiene relacion con Usuario. La relacion "Realiza"
- * del DER (Usuario 1 -- N Pedido) se va a agregar cuando trabajen la
- * parte de seguridad y tengan un Usuario real con login.
+ * Relacion "Realiza" del DER (Usuario 1 -- N Pedido): ya con seguridad
+ * andando, el Pedido queda asociado al Usuario autenticado que lo crea.
  */
 @Entity
 @Table(name = "pedido")
@@ -43,4 +44,8 @@ public class Pedido {
 
     @Column(name = "total", nullable = false)
     private BigDecimal total;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 }

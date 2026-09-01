@@ -45,7 +45,10 @@ public class Producto {
     private Integer stock;
 
 
-    @Column(name = "descuento_porcentaje", nullable = false)
+    // columnDefinition con "default 0" para que, si la tabla ya tiene
+    // productos cargados, el ALTER TABLE de Hibernate (ddl-auto=update) no
+    // falle por violar el NOT NULL en las filas existentes.
+    @Column(name = "descuento_porcentaje", nullable = false, columnDefinition = "numeric(5,2) default 0")
     private BigDecimal descuentoPorcentaje = BigDecimal.ZERO;
 
     @ManyToOne
