@@ -19,7 +19,7 @@ import com.uade.ecom.model.DetallePedido;
 import com.uade.ecom.service.DetallePedidoService;
 
 @RestController
-@RequestMapping("/detalles-pedido")
+@RequestMapping("/detallesPedido")
 public class DetallePedidoController {
 
     @Autowired

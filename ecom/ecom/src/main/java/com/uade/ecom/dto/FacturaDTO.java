@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * Reporte "factura" de un pedido: junta el pedido con sus DetallePedido
  * (items comprados) y sus Pago (pagos aplicados), mas un par de totales
  * calculados, para poder mostrarlo/imprimirlo de una sola consulta en vez
- * de tener que pedir /pedidos, /detalles-pedido y /pagos por separado.
+ * de tener que pedir /pedidos, /detallesPedido y /pagos por separado.
  */
 @Data
 @NoArgsConstructor

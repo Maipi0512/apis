@@ -19,7 +19,7 @@ import com.uade.ecom.model.ItemCarrito;
 import com.uade.ecom.service.ItemCarritoService;
 
 @RestController
-@RequestMapping("/items-carrito")
+@RequestMapping("/itemsCarrito")
 public class ItemCarritoController {
 
     @Autowired

@@ -133,27 +133,27 @@
 		{ "_id": "fld_itemcarrito", "_type": "request_group", "parentId": "wrk_ecom", "name": "ItemCarrito", "metaSortKey": 4 },
 		{
 			"_id": "req_ic_getall", "_type": "request", "parentId": "fld_itemcarrito", "name": "GET ItemsCarrito (todos)",
-			"method": "GET", "url": "{{ _.base_url }}/items-carrito", "body": {}, "headers": [], "metaSortKey": 0
+			"method": "GET", "url": "{{ _.base_url }}/itemsCarrito", "body": {}, "headers": [], "metaSortKey": 0
 		},
 		{
 			"_id": "req_ic_getone", "_type": "request", "parentId": "fld_itemcarrito", "name": "GET ItemCarrito por id",
-			"method": "GET", "url": "{{ _.base_url }}/items-carrito/1", "body": {}, "headers": [], "metaSortKey": 1
+			"method": "GET", "url": "{{ _.base_url }}/itemsCarrito/1", "body": {}, "headers": [], "metaSortKey": 1
 		},
 		{
 			"_id": "req_ic_post", "_type": "request", "parentId": "fld_itemcarrito", "name": "POST ItemCarrito (requiere carritoId y productoId existentes)",
-			"method": "POST", "url": "{{ _.base_url }}/items-carrito",
+			"method": "POST", "url": "{{ _.base_url }}/itemsCarrito",
 			"body": { "mimeType": "application/json", "text": "{\n  \"carritoId\": 1,\n  \"productoId\": 1,\n  \"cantidad\": 2\n}" },
 			"headers": [{ "name": "Content-Type", "value": "application/json" }], "metaSortKey": 2
 		},
 		{
 			"_id": "req_ic_put", "_type": "request", "parentId": "fld_itemcarrito", "name": "PUT ItemCarrito (id=1)",
-			"method": "PUT", "url": "{{ _.base_url }}/items-carrito/1",
+			"method": "PUT", "url": "{{ _.base_url }}/itemsCarrito/1",
 			"body": { "mimeType": "application/json", "text": "{\n  \"carritoId\": 1,\n  \"productoId\": 1,\n  \"cantidad\": 5\n}" },
 			"headers": [{ "name": "Content-Type", "value": "application/json" }], "metaSortKey": 3
 		},
 		{
 			"_id": "req_ic_delete", "_type": "request", "parentId": "fld_itemcarrito", "name": "DELETE ItemCarrito (id=1)",
-			"method": "DELETE", "url": "{{ _.base_url }}/items-carrito/1", "body": {}, "headers": [], "metaSortKey": 4
+			"method": "DELETE", "url": "{{ _.base_url }}/itemsCarrito/1", "body": {}, "headers": [], "metaSortKey": 4
 		},
 
 		{ "_id": "fld_pedido", "_type": "request_group", "parentId": "wrk_ecom", "name": "Pedido", "metaSortKey": 5 },
@@ -187,27 +187,27 @@
 		{ "_id": "fld_detallepedido", "_type": "request_group", "parentId": "wrk_ecom", "name": "DetallePedido", "metaSortKey": 6 },
 		{
 			"_id": "req_dp_getall", "_type": "request", "parentId": "fld_detallepedido", "name": "GET DetallesPedido (todos)",
-			"method": "GET", "url": "{{ _.base_url }}/detalles-pedido", "body": {}, "headers": [], "metaSortKey": 0
+			"method": "GET", "url": "{{ _.base_url }}/detallesPedido", "body": {}, "headers": [], "metaSortKey": 0
 		},
 		{
 			"_id": "req_dp_getone", "_type": "request", "parentId": "fld_detallepedido", "name": "GET DetallePedido por id",
-			"method": "GET", "url": "{{ _.base_url }}/detalles-pedido/1", "body": {}, "headers": [], "metaSortKey": 1
+			"method": "GET", "url": "{{ _.base_url }}/detallesPedido/1", "body": {}, "headers": [], "metaSortKey": 1
 		},
 		{
 			"_id": "req_dp_post", "_type": "request", "parentId": "fld_detallepedido", "name": "POST DetallePedido (pedido debe estar PENDIENTE; precioUnitario se toma del producto)",
-			"method": "POST", "url": "{{ _.base_url }}/detalles-pedido",
+			"method": "POST", "url": "{{ _.base_url }}/detallesPedido",
 			"body": { "mimeType": "application/json", "text": "{\n  \"pedidoId\": 1,\n  \"productoId\": 1,\n  \"cantidad\": 2\n}" },
 			"headers": [{ "name": "Content-Type", "value": "application/json" }], "metaSortKey": 2
 		},
 		{
 			"_id": "req_dp_put", "_type": "request", "parentId": "fld_detallepedido", "name": "PUT DetallePedido (id=1)",
-			"method": "PUT", "url": "{{ _.base_url }}/detalles-pedido/1",
+			"method": "PUT", "url": "{{ _.base_url }}/detallesPedido/1",
 			"body": { "mimeType": "application/json", "text": "{\n  \"pedidoId\": 1,\n  \"productoId\": 1,\n  \"cantidad\": 4\n}" },
 			"headers": [{ "name": "Content-Type", "value": "application/json" }], "metaSortKey": 3
 		},
 		{
 			"_id": "req_dp_delete", "_type": "request", "parentId": "fld_detallepedido", "name": "DELETE DetallePedido (id=1)",
-			"method": "DELETE", "url": "{{ _.base_url }}/detalles-pedido/1", "body": {}, "headers": [], "metaSortKey": 4
+			"method": "DELETE", "url": "{{ _.base_url }}/detallesPedido/1", "body": {}, "headers": [], "metaSortKey": 4
 		},
 
 		{ "_id": "fld_pago", "_type": "request_group", "parentId": "wrk_ecom", "name": "Pago", "metaSortKey": 7 },
