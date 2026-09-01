@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.ProveedorRequestDTO;
+import com.uade.ecom.exception.EntidadEnUsoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.model.Proveedor;
+import com.uade.ecom.repository.ProductoRepository;
 import com.uade.ecom.repository.ProveedorRepository;
 
 @Service
@@ -15,6 +17,9 @@ public class ProveedorServiceImpl implements ProveedorService {
 
     @Autowired
     private ProveedorRepository proveedorRepository;
+
+    @Autowired
+    private ProductoRepository productoRepository;
 
     @Override
     public List<Proveedor> getAllProveedores() {
@@ -49,6 +54,12 @@ public class ProveedorServiceImpl implements ProveedorService {
     public void deleteProveedor(Long id) {
         Proveedor proveedor = proveedorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun proveedor con id " + id));
+
+        if (productoRepository.existsByProveedorId(id)) {
+            throw new EntidadEnUsoException(
+                    "No se puede eliminar el proveedor " + id + " porque tiene productos asociados");
+        }
+
         proveedorRepository.delete(proveedor);
     }
 }

@@ -1,0 +1,67 @@
+Categoria
+POST /categorias y PUT /categorias/{id}
+
+
+{
+  "nombre": "Ferreteria"
+}
+Proveedor
+POST /proveedores y PUT /proveedores/{id}
+
+
+{
+  "nombre": "Distribuidora Sur",
+  "contacto": "011-4555-1234"
+}
+Producto
+POST /productos y PUT /productos/{id} — categoriaId obligatorio, proveedorId opcional
+
+
+{
+  "nombre": "Martillo",
+  "precio": 4500.00,
+  "stock": 20,
+  "categoriaId": 1,
+  "proveedorId": 1
+}
+Carrito
+POST /carritos → sin body. POST /carritos/{id}/checkout → sin body (necesita items cargados).
+
+ItemCarrito
+POST /items-carrito y PUT /items-carrito/{id} — carritoId y productoId deben existir
+
+
+{
+  "carritoId": 1,
+  "productoId": 1,
+  "cantidad": 2
+}
+Pedido
+POST /pedidos → sin body (arranca en PENDIENTE, total 0).
+
+PUT /pedidos/{id} — solo cambia el estado, y respeta la máquina de estados (PENDIENTE→PAGADO→ENVIADO→ENTREGADO, o PENDIENTE/PAGADO→CANCELADO)
+
+
+{
+  "estado": "PAGADO"
+}
+GET /pedidos/{id}/factura → sin body, devuelve el reporte de factura.
+
+DetallePedido
+POST /detalles-pedido y PUT /detalles-pedido/{id} — el pedido tiene que estar PENDIENTE; el precioUnitario lo pone el sistema solo
+
+
+{
+  "pedidoId": 1,
+  "productoId": 1,
+  "cantidad": 2
+}
+Pago
+POST /pagos y PUT /pagos/{id} — no puede superar el saldo pendiente del pedido, ni pagarse un pedido CANCELADO
+
+
+{
+  "pedidoId": 1,
+  "metodoPago": "TARJETA",
+  "monto": 1000.00
+}

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.ItemCarritoRequestDTO;
+import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.model.Carrito;
 import com.uade.ecom.model.ItemCarrito;
@@ -39,6 +40,8 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
 
     @Override
     public ItemCarrito createItemCarrito(ItemCarritoRequestDTO itemCarritoRequestDTO) {
+        validarCantidad(itemCarritoRequestDTO.getCantidad());
+
         Carrito carrito = carritoRepository.findById(itemCarritoRequestDTO.getCarritoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ningun carrito con id " + itemCarritoRequestDTO.getCarritoId()));
@@ -57,6 +60,8 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
 
     @Override
     public ItemCarrito updateItemCarrito(Long id, ItemCarritoRequestDTO itemCarritoRequestDTO) {
+        validarCantidad(itemCarritoRequestDTO.getCantidad());
+
         ItemCarrito itemCarrito = itemCarritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun item de carrito con id " + id));
 
@@ -80,5 +85,11 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
         ItemCarrito itemCarrito = itemCarritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun item de carrito con id " + id));
         itemCarritoRepository.delete(itemCarrito);
+    }
+
+    private void validarCantidad(Integer cantidad) {
+        if (cantidad == null || cantidad <= 0) {
+            throw new DatoInvalidoException("La cantidad tiene que ser mayor a 0");
+        }
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.DetallePedidoRequestDTO;
+import com.uade.ecom.exception.DatoInvalidoException;
+import com.uade.ecom.exception.PedidoNoEditableException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.model.DetallePedido;
 import com.uade.ecom.model.Pedido;
@@ -17,6 +19,8 @@ import com.uade.ecom.repository.ProductoRepository;
 
 @Service
 public class DetallePedidoServiceImpl implements DetallePedidoService {
+
+    private static final String ESTADO_PENDIENTE = "PENDIENTE";
 
     @Autowired
     private DetallePedidoRepository detallePedidoRepository;
@@ -40,9 +44,13 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
 
     @Override
     public DetallePedido createDetallePedido(DetallePedidoRequestDTO detallePedidoRequestDTO) {
+        validarCantidad(detallePedidoRequestDTO.getCantidad());
+
         Pedido pedido = pedidoRepository.findById(detallePedidoRequestDTO.getPedidoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ningun pedido con id " + detallePedidoRequestDTO.getPedidoId()));
+
+        validarPedidoEditable(pedido);
 
         Producto producto = productoRepository.findById(detallePedidoRequestDTO.getProductoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -69,6 +77,8 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
 
     @Override
     public DetallePedido updateDetallePedido(Long id, DetallePedidoRequestDTO detallePedidoRequestDTO) {
+        validarCantidad(detallePedidoRequestDTO.getCantidad());
+
         DetallePedido detalle = detallePedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun detalle con id " + id));
 
@@ -83,6 +93,11 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
         // Sacamos el subtotal viejo del total del pedido original (puede
         // ser el mismo pedido o uno distinto si cambio el pedidoId).
         Pedido pedidoOriginal = detalle.getPedido();
+        validarPedidoEditable(pedidoOriginal);
+        if (!pedidoOriginal.getId().equals(nuevoPedido.getId())) {
+            validarPedidoEditable(nuevoPedido);
+        }
+
         BigDecimal subtotalViejo = detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad()));
         pedidoOriginal.setTotal(pedidoOriginal.getTotal().subtract(subtotalViejo));
 
@@ -111,10 +126,31 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun detalle con id " + id));
 
         Pedido pedido = detalle.getPedido();
+        validarPedidoEditable(pedido);
+
         BigDecimal subtotal = detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad()));
         pedido.setTotal(pedido.getTotal().subtract(subtotal));
         pedidoRepository.save(pedido);
 
         detallePedidoRepository.delete(detalle);
+    }
+
+    /**
+     * Un DetallePedido solo se puede agregar/editar/borrar mientras el
+     * pedido este PENDIENTE: una vez pagado, enviado, etc. el total ya
+     * quedo cobrado/facturado y no se puede tocar por atras.
+     */
+    private void validarPedidoEditable(Pedido pedido) {
+        if (!ESTADO_PENDIENTE.equals(pedido.getEstado())) {
+            throw new PedidoNoEditableException(
+                    "No se puede modificar el detalle del pedido " + pedido.getId()
+                            + " porque su estado es " + pedido.getEstado() + " (solo se puede mientras esta PENDIENTE)");
+        }
+    }
+
+    private void validarCantidad(Integer cantidad) {
+        if (cantidad == null || cantidad <= 0) {
+            throw new DatoInvalidoException("La cantidad tiene que ser mayor a 0");
+        }
     }
 }

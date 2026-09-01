@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import com.uade.ecom.dto.CategoriaRequestDTO;
 import com.uade.ecom.exception.CategoriaDuplicadaException;
 import com.uade.ecom.exception.CategoriaNotFoundException;
+import com.uade.ecom.exception.EntidadEnUsoException;
 import com.uade.ecom.model.Categoria;
 import com.uade.ecom.repository.CategoriaRepository;
+import com.uade.ecom.repository.ProductoRepository;
 
 /**
  * Implementacion de CategoriaService: aca vive la logica de negocio.
@@ -19,6 +21,9 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Autowired
     private CategoriaRepository categoriaRepository;
+
+    @Autowired
+    private ProductoRepository productoRepository;
 
     @Override
     public List<Categoria> getAllCategorias() {
@@ -71,6 +76,12 @@ public class CategoriaServiceImpl implements CategoriaService {
     public void deleteCategoria(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new CategoriaNotFoundException("No se encontro ninguna categoria con id " + id));
+
+        if (productoRepository.existsByCategoriaId(id)) {
+            throw new EntidadEnUsoException(
+                    "No se puede eliminar la categoria " + id + " porque tiene productos asociados");
+        }
+
         categoriaRepository.delete(categoria);
     }
 }
