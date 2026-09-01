@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * proveedorId es opcional (nullable = true en Producto); categoriaId es
- * obligatorio.
+ * obligatorio. descuentoPorcentaje tambien es opcional: si no se manda (o
+ * se manda null), el producto queda sin descuento (0).
  */
 @Data
 @NoArgsConstructor
@@ -20,4 +21,5 @@ public class ProductoRequestDTO {
     private Integer stock;
     private Long categoriaId;
     private Long proveedorId;
+    private BigDecimal descuentoPorcentaje;
 }

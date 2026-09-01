@@ -14,16 +14,19 @@ import com.uade.ecom.dto.FacturaDTO;
 import com.uade.ecom.dto.ItemFacturaDTO;
 import com.uade.ecom.dto.PagoFacturaDTO;
 import com.uade.ecom.dto.PedidoUpdateDTO;
+import com.uade.ecom.exception.AccesoDenegadoException;
 import com.uade.ecom.exception.PedidoVacioException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.exception.TransicionEstadoInvalidaException;
 import com.uade.ecom.model.DetallePedido;
 import com.uade.ecom.model.Pedido;
 import com.uade.ecom.model.Producto;
+import com.uade.ecom.model.Usuario;
 import com.uade.ecom.repository.DetallePedidoRepository;
 import com.uade.ecom.repository.PagoRepository;
 import com.uade.ecom.repository.PedidoRepository;
 import com.uade.ecom.repository.ProductoRepository;
+import com.uade.ecom.util.SecurityUtils;
 
 @Service
 public class PedidoServiceImpl implements PedidoService {
@@ -57,13 +60,18 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public List<Pedido> getAllPedidos() {
-        return pedidoRepository.findAll();
+        if (SecurityUtils.esAdmin()) {
+            return pedidoRepository.findAll();
+        }
+        return pedidoRepository.findByUsuarioId(SecurityUtils.getUsuarioActual().getId());
     }
 
     @Override
     public Pedido getPedidoById(Long id) {
-        return pedidoRepository.findById(id)
+        Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
+        validarDueño(pedido);
+        return pedido;
     }
 
     @Override
@@ -72,10 +80,16 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setFecha(LocalDate.now());
         pedido.setEstado("PENDIENTE");
         pedido.setTotal(BigDecimal.ZERO);
+        pedido.setUsuario(SecurityUtils.getUsuarioActual());
 
         return pedidoRepository.save(pedido);
     }
 
+    /**
+     * Cambiar el estado de un pedido (ej. a "ENVIADO") es una accion
+     * administrativa; el SecurityConfig ya restringe PUT /pedidos/** a
+     * ADMIN, asi que aca no hace falta validarDueño de nuevo.
+     */
     @Override
     public Pedido updatePedido(Long id, PedidoUpdateDTO pedidoUpdateDTO) {
         Pedido pedido = pedidoRepository.findById(id)
@@ -108,13 +122,30 @@ public class PedidoServiceImpl implements PedidoService {
     public void deletePedido(Long id) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
+        validarDueño(pedido);
         pedidoRepository.delete(pedido);
+    }
+
+    /**
+     * Un CLIENTE solo puede ver/tocar sus propios pedidos; un ADMIN
+     * puede con cualquiera.
+     */
+    private void validarDueño(Pedido pedido) {
+        if (SecurityUtils.esAdmin()) {
+            return;
+        }
+        Usuario actual = SecurityUtils.getUsuarioActual();
+        Usuario dueño = pedido.getUsuario();
+        if (dueño == null || !dueño.getId().equals(actual.getId())) {
+            throw new AccesoDenegadoException("El pedido " + pedido.getId() + " no pertenece al usuario autenticado");
+        }
     }
 
     @Override
     public FacturaDTO getFactura(Long id) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
+        validarDueño(pedido);
 
         List<ItemFacturaDTO> items = detallePedidoRepository.findByPedidoId(id).stream()
                 .map(this::toItemFactura)

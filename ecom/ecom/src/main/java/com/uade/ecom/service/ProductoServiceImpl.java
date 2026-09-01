@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.ProductoRequestDTO;
 import com.uade.ecom.exception.DatoInvalidoException;
+import com.uade.ecom.exception.DescuentoInvalidoException;
 import com.uade.ecom.exception.EntidadEnUsoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.model.Categoria;
@@ -57,6 +58,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setPrecio(productoRequestDTO.getPrecio());
         producto.setStock(productoRequestDTO.getStock());
         producto.setCategoria(categoria);
+        producto.setDescuentoPorcentaje(validarDescuento(productoRequestDTO.getDescuentoPorcentaje()));
 
         if (productoRequestDTO.getProveedorId() != null) {
             Proveedor proveedor = proveedorRepository.findById(productoRequestDTO.getProveedorId())
@@ -83,6 +85,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setPrecio(productoRequestDTO.getPrecio());
         producto.setStock(productoRequestDTO.getStock());
         producto.setCategoria(categoria);
+        producto.setDescuentoPorcentaje(validarDescuento(productoRequestDTO.getDescuentoPorcentaje()));
 
         if (productoRequestDTO.getProveedorId() != null) {
             Proveedor proveedor = proveedorRepository.findById(productoRequestDTO.getProveedorId())
@@ -94,6 +97,22 @@ public class ProductoServiceImpl implements ProductoService {
         }
 
         return productoRepository.save(producto);
+    }
+
+    /**
+     * Si no mandan descuentoPorcentaje, el producto queda sin descuento (0).
+     * Si lo mandan, tiene que estar entre 0 y 100.
+     */
+    private BigDecimal validarDescuento(BigDecimal descuentoPorcentaje) {
+        if (descuentoPorcentaje == null) {
+            return BigDecimal.ZERO;
+        }
+        if (descuentoPorcentaje.compareTo(BigDecimal.ZERO) < 0
+                || descuentoPorcentaje.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new DescuentoInvalidoException(
+                    "El descuentoPorcentaje debe estar entre 0 y 100, se recibio " + descuentoPorcentaje);
+        }
+        return descuentoPorcentaje;
     }
 
     @Override
