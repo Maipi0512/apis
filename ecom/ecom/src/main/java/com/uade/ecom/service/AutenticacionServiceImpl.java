@@ -42,6 +42,7 @@ public class AutenticacionServiceImpl implements AutenticacionService {
         usuario.setEmail(registroRequestDTO.getEmail());
         usuario.setPassword(passwordEncoder.encode(registroRequestDTO.getPassword()));
         usuario.setRol(registroRequestDTO.getRol());
+        usuario.setDireccion(registroRequestDTO.getDireccion());
 
         usuarioRepository.save(usuario);
 

@@ -1,7 +1,0 @@
-$kind: http-request
-url: "{{base_url}}/carritos"
-method: POST
-body:
-  type: text
-  content: ""
-order: 1000

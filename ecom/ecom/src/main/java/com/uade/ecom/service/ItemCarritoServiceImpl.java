@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.uade.ecom.dto.ItemCarritoRequestDTO;
 import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
+import com.uade.ecom.exception.StockInsuficienteException;
 import com.uade.ecom.model.Carrito;
 import com.uade.ecom.model.ItemCarrito;
 import com.uade.ecom.model.Producto;
@@ -50,6 +51,8 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ningun producto con id " + itemCarritoRequestDTO.getProductoId()));
 
+        validarStock(producto, itemCarritoRequestDTO.getCantidad());
+
         ItemCarrito itemCarrito = new ItemCarrito();
         itemCarrito.setCarrito(carrito);
         itemCarrito.setProducto(producto);
@@ -73,6 +76,8 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ningun producto con id " + itemCarritoRequestDTO.getProductoId()));
 
+        validarStock(producto, itemCarritoRequestDTO.getCantidad());
+
         itemCarrito.setCarrito(carrito);
         itemCarrito.setProducto(producto);
         itemCarrito.setCantidad(itemCarritoRequestDTO.getCantidad());
@@ -90,6 +95,20 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
     private void validarCantidad(Integer cantidad) {
         if (cantidad == null || cantidad <= 0) {
             throw new DatoInvalidoException("La cantidad tiene que ser mayor a 0");
+        }
+    }
+
+    /**
+     * El checkout vuelve a validar esto (el stock puede cambiar entre que
+     * se agrega al carrito y se confirma la compra), pero avisar aca
+     * tambien evita que el carrito muestre cantidades que de entrada ya
+     * sabemos que no se van a poder comprar.
+     */
+    private void validarStock(Producto producto, Integer cantidad) {
+        if (cantidad > producto.getStock()) {
+            throw new StockInsuficienteException(
+                    "No hay stock suficiente de " + producto.getNombre()
+                            + " (pedido: " + cantidad + ", disponible: " + producto.getStock() + ")");
         }
     }
 }

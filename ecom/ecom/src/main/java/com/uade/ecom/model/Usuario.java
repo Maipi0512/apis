@@ -50,6 +50,13 @@ public class Usuario implements UserDetails {
     @Column(name = "password", nullable = false)
     private String password;
 
+    // Nullable a proposito: no todos los usuarios cargan direccion al
+    // registrarse (ej. un ADMIN no la necesita). Es un campo simple, no
+    // una entidad aparte -- la tabla "direccion" del diseño original
+    // quedo sin uso, se reemplaza por esto.
+    @Column(name = "direccion")
+    private String direccion;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
     private Rol rol;
