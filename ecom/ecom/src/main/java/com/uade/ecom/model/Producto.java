@@ -9,12 +9,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * Entidad "Producto" del DER.
@@ -59,6 +64,21 @@ public class Producto {
     @JoinColumn(name = "proveedor_id")
     private Proveedor proveedor;
 
+    // Imagen del producto guardada como bytes directo en la base (bytea en
+    // Postgres). @Lob + @JsonIgnore para que NO viaje en el JSON de
+    // /productos (seria un base64 gigante en cada producto de la lista):
+    // la imagen se sube y se descarga por endpoints propios
+    // (POST/GET /productos/{id}/imagen), no como parte del Producto.
+    @Lob
+    @Column(name = "imagen")
+    @JsonIgnore
+    @ToString.Exclude
+    private byte[] imagen;
+
+    @Column(name = "imagen_content_type")
+    @JsonIgnore
+    private String imagenContentType;
+
     // No se guarda en la base (@Transient): se calcula al vuelo cada vez
     // que se serializa el producto a JSON, así el front siempre ve el
     // precio ya con el descuento aplicado sin tener que calcularlo el.
@@ -68,5 +88,13 @@ public class Producto {
                 .multiply(descuentoPorcentaje)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         return precio.subtract(descuento);
+    }
+
+    // Tambien @Transient: si el producto tiene imagen cargada, le decimos
+    // al front donde puede pedirla (GET a esta url devuelve los bytes de
+    // la imagen con su Content-Type real, lista para poner en un <img src>).
+    @Transient
+    public String getImagenUrl() {
+        return (imagen != null && imagen.length > 0) ? "/productos/" + id + "/imagen" : null;
     }
 }

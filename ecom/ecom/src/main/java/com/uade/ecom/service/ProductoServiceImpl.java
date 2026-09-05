@@ -1,10 +1,12 @@
 package com.uade.ecom.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.ecom.dto.ProductoRequestDTO;
 import com.uade.ecom.exception.DatoInvalidoException;
@@ -126,6 +128,43 @@ public class ProductoServiceImpl implements ProductoService {
         }
 
         productoRepository.delete(producto);
+    }
+
+    @Override
+    public Producto actualizarImagen(Long id, MultipartFile file) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun producto con id " + id));
+
+        if (file == null || file.isEmpty()) {
+            throw new DatoInvalidoException("Hay que mandar un archivo de imagen (no puede venir vacio)");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new DatoInvalidoException(
+                    "El archivo tiene que ser una imagen (jpg, png, etc.), se recibio " + contentType);
+        }
+
+        try {
+            producto.setImagen(file.getBytes());
+            producto.setImagenContentType(contentType);
+        } catch (IOException e) {
+            throw new DatoInvalidoException("No se pudo leer el archivo de imagen enviado");
+        }
+
+        return productoRepository.save(producto);
+    }
+
+    @Override
+    public Producto getImagenProducto(Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun producto con id " + id));
+
+        if (producto.getImagen() == null || producto.getImagen().length == 0) {
+            throw new ResourceNotFoundException("El producto " + id + " todavia no tiene una imagen cargada");
+        }
+
+        return producto;
     }
 
     private void validarDatosProducto(ProductoRequestDTO dto) {
