@@ -11,7 +11,10 @@ import com.uade.ecom.dto.auth.AutenticacionResponseDTO;
 import com.uade.ecom.dto.auth.LoginRequestDTO;
 import com.uade.ecom.dto.auth.RegistroRequestDTO;
 import com.uade.ecom.exception.EntidadEnUsoException;
+import com.uade.ecom.model.Carrito;
+import com.uade.ecom.model.Rol;
 import com.uade.ecom.model.Usuario;
+import com.uade.ecom.repository.CarritoRepository;
 import com.uade.ecom.repository.UsuarioRepository;
 
 @Service
@@ -19,6 +22,9 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private CarritoRepository carritoRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -41,10 +47,18 @@ public class AutenticacionServiceImpl implements AutenticacionService {
         usuario.setApellido(registroRequestDTO.getApellido());
         usuario.setEmail(registroRequestDTO.getEmail());
         usuario.setPassword(passwordEncoder.encode(registroRequestDTO.getPassword()));
-        usuario.setRol(registroRequestDTO.getRol());
         usuario.setDireccion(registroRequestDTO.getDireccion());
+        // El registro publico siempre crea CLIENTE. El unico ADMIN lo
+        // crea AdminSeeder al arrancar la app, no este endpoint.
+        usuario.setRol(Rol.CLIENTE);
 
-        usuarioRepository.save(usuario);
+        usuario = usuarioRepository.save(usuario);
+
+        // Todo cliente arranca con su carrito ya armado -- no hace falta
+        // un POST /carritos aparte antes de poder empezar a comprar.
+        Carrito carrito = new Carrito();
+        carrito.setUsuario(usuario);
+        carritoRepository.save(carrito);
 
         String token = jwtService.generateToken(usuario);
         return new AutenticacionResponseDTO(token);

@@ -1,0 +1,18 @@
+# Copia este archivo como "application-local.properties" (mismo directorio)
+# y completa los 3 valores. Ese archivo NO se sube a git (ver .gitignore),
+# asi que cada uno lo tiene que crear en su propia compu.
+
+# Usuario y password de Supabase del proyecto del equipo
+# (Project Settings > Database > Connection pooling / Connect > Session pooler)
+DB_USERNAME=postgres.xxxxxxxxxxxx
+DB_PASSWORD=
+
+# Clave para firmar los JWT: cualquier string largo y random, no hace
+# falta que sea la misma para todos. Se puede generar con:
+#   openssl rand -hex 32
+JWT_SECRET_KEY=
+
+# Opcional: credenciales del ADMIN que se crea solo al arrancar la app
+# (ver AdminSeeder). Si no se ponen, usa admin@ecom.com / admin1234.
+#ADMIN_EMAIL=admin@ecom.com
+#ADMIN_PASSWORD=admin1234

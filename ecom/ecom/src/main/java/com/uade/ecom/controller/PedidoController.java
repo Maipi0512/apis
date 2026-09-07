@@ -1,6 +1,7 @@
 package com.uade.ecom.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,8 +16,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.ecom.dto.FacturaDTO;
+import com.uade.ecom.dto.PedidoResponseDTO;
 import com.uade.ecom.dto.PedidoUpdateDTO;
-import com.uade.ecom.model.Pedido;
 import com.uade.ecom.service.PedidoService;
 
 @RestController
@@ -27,28 +28,29 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @GetMapping
-    public List<Pedido> getAllPedidos() {
-        return pedidoService.getAllPedidos();
+    public List<PedidoResponseDTO> getAllPedidos() {
+        return pedidoService.getAllPedidos().stream()
+                .map(PedidoResponseDTO::from)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public Pedido getPedidoById(@PathVariable Long id) {
-        return pedidoService.getPedidoById(id);
+    public PedidoResponseDTO getPedidoById(@PathVariable Long id) {
+        return PedidoResponseDTO.from(pedidoService.getPedidoById(id));
     }
 
     /**
-     * Por ahora un pedido se crea "vacio" (sin usuario todavia). Cuando
-     * tengan login, este metodo va a tomar el usuario autenticado en vez
-     * de no recibir nada.
+     * El pedido se crea vacio (estado PENDIENTE, total 0) para el usuario
+     * autenticado; se le van agregando DetallePedido despues.
      */
     @PostMapping
-    public Pedido createPedido() {
-        return pedidoService.createPedido();
+    public PedidoResponseDTO createPedido() {
+        return PedidoResponseDTO.from(pedidoService.createPedido());
     }
 
     @PutMapping("/{id}")
-    public Pedido updatePedido(@PathVariable Long id, @RequestBody PedidoUpdateDTO pedidoUpdateDTO) {
-        return pedidoService.updatePedido(id, pedidoUpdateDTO);
+    public PedidoResponseDTO updatePedido(@PathVariable Long id, @RequestBody PedidoUpdateDTO pedidoUpdateDTO) {
+        return PedidoResponseDTO.from(pedidoService.updatePedido(id, pedidoUpdateDTO));
     }
 
     @DeleteMapping("/{id}")
@@ -59,7 +61,10 @@ public class PedidoController {
 
     /**
      * Reporte tipo "factura" del pedido: junta el pedido, sus items
-     * (DetallePedido) y sus pagos en una sola respuesta.
+     * (DetallePedido) y sus pagos en una sola respuesta. El precio de
+     * cada item y la fecha del pedido los carga el sistema siempre (ver
+     * DetallePedidoRequestDTO y PedidoServiceImpl.createPedido), nunca
+     * vienen del body de un request.
      */
     @GetMapping("/{id}/factura")
     public FacturaDTO getFactura(@PathVariable Long id) {

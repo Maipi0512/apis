@@ -7,6 +7,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,7 +49,11 @@ public class Usuario implements UserDetails {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    // @JsonIgnore: el hash de la password nunca tiene que viajar en un
+    // JSON de respuesta, ni siquiera cuando Usuario aparece anidado
+    // dentro de otra entidad (Pedido.usuario, Carrito.usuario, etc.).
     @Column(name = "password", nullable = false)
+    @JsonIgnore
     private String password;
 
     // Nullable a proposito: no todos los usuarios cargan direccion al

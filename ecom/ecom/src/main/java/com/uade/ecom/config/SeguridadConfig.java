@@ -20,7 +20,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *
  * "/auth/**" queda publico (ahi es donde se registra/loguea un usuario
  * para conseguir el token). El catalogo (categorias, productos,
- * proveedores) se puede LEER con cualquier usuario logueado, pero
+ * proveedores) se puede LEER sin estar logueado -- como en Mercado
+ * Libre, cualquiera puede entrar a mirar productos -- pero
  * crearlo/editarlo/borrarlo es solo de ADMIN. Cambiar el estado de un
  * Pedido (PUT) tambien es solo de ADMIN. El resto (carritos, items de
  * carrito, pedidos, pagos, detalles de pedido) queda para cualquier
@@ -46,7 +47,7 @@ public class SeguridadConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categorias/**", "/productos/**", "/proveedores/**")
-                        .authenticated()
+                        .permitAll()
                         .requestMatchers(HttpMethod.POST, "/categorias/**", "/productos/**", "/proveedores/**")
                         .hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/categorias/**", "/productos/**", "/proveedores/**")
