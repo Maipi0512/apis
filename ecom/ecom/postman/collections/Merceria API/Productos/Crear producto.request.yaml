@@ -10,7 +10,6 @@ body:
       "nombre": "Destornillador",
       "precio": 1500,
       "stock": 20,
-      "categoriaId": 1,
-      "proveedorId": 1
+      "categoriaId": 1
     }
 order: 1000

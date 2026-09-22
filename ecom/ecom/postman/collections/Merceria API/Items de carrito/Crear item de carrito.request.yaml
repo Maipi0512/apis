@@ -7,7 +7,6 @@ body:
   type: text
   content: |-
     {
-      "carritoId": 1,
       "productoId": 1,
       "cantidad": 3
     }

@@ -9,4 +9,6 @@ import com.uade.ecom.model.ItemCarrito;
 public interface ItemCarritoRepository extends JpaRepository<ItemCarrito, Long> {
 
     List<ItemCarrito> findByCarritoId(Long carritoId);
+
+    List<ItemCarrito> findByCarrito_Usuario_Id(Long usuarioId);
 }

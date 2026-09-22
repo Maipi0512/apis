@@ -19,14 +19,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * (JwtAutenticacionFilter) respecto del filtro de Spring.
  *
  * "/auth/**" queda publico (ahi es donde se registra/loguea un usuario
- * para conseguir el token). El catalogo (categorias, productos,
- * proveedores) se puede LEER con cualquier usuario logueado, pero
- * crearlo/editarlo/borrarlo es solo de ADMIN. Cambiar el estado de un
- * Pedido (PUT) tambien es solo de ADMIN. El resto (carritos, items de
- * carrito, pedidos, pagos, detalles de pedido) queda para cualquier
- * usuario autenticado -- el filtro de "es mio o soy admin" para Carrito
- * y Pedido se hace en el service (ver CarritoServiceImpl/PedidoServiceImpl),
- * porque Spring Security por si solo no sabe de quien es cada fila.
+ * para conseguir el token). El catalogo que ve un visitante (categorias,
+ * productos) se puede LEER sin login, como en cualquier tienda online
+ * (Mercado Libre, etc.), pero crearlo/editarlo/borrarlo es solo de
+ * ADMIN. Cambiar el estado de un Pedido (PUT) tambien es solo de ADMIN.
+ * El resto (carritos, items de carrito, pedidos, pagos, detalles de
+ * pedido) queda para cualquier usuario autenticado -- el filtro de "es
+ * mio o soy admin" para Carrito y Pedido se hace en el service (ver
+ * CarritoServiceImpl/PedidoServiceImpl), porque Spring Security por si
+ * solo no sabe de quien es cada fila.
  */
 @Configuration
 @EnableWebSecurity
@@ -45,13 +46,13 @@ public class SeguridadConfig {
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/categorias/**", "/productos/**", "/proveedores/**")
-                        .authenticated()
-                        .requestMatchers(HttpMethod.POST, "/categorias/**", "/productos/**", "/proveedores/**")
+                        .requestMatchers(HttpMethod.GET, "/categorias/**", "/productos/**")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/categorias/**", "/productos/**")
                         .hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/categorias/**", "/productos/**", "/proveedores/**")
+                        .requestMatchers(HttpMethod.PUT, "/categorias/**", "/productos/**")
                         .hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/categorias/**", "/productos/**", "/proveedores/**")
+                        .requestMatchers(HttpMethod.DELETE, "/categorias/**", "/productos/**")
                         .hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/pedidos/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())

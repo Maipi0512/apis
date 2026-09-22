@@ -8,5 +8,8 @@ import com.uade.ecom.model.Pedido;
 
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
-    List<Pedido> findByUsuarioId(Long usuarioId);
+    // "Usuario_Id" con guion bajo: fuerza a Spring Data a navegar
+    // usuario.id, para no confundirse con el getUsuarioId() transient
+    // que Pedido expone solo para el JSON de salida.
+    List<Pedido> findByUsuario_Id(Long usuarioId);
 }

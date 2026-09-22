@@ -52,14 +52,15 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
         detalle.setPedido(pedido);
         detalle.setProducto(producto);
         detalle.setCantidad(detallePedidoRequestDTO.getCantidad());
-        // El precio unitario se toma del precio actual del producto, no
-        // del usuario, para que no lo pueda manipular desde el body.
-        detalle.setPrecioUnitario(producto.getPrecio());
+        // El precio unitario se toma del precio actual del producto (ya
+        // con el descuento aplicado), no del usuario, para que no lo
+        // pueda manipular desde el body.
+        detalle.setPrecioUnitario(producto.getPrecioFinal());
 
         DetallePedido detalleGuardado = detallePedidoRepository.save(detalle);
 
         // Actualizamos el total del pedido sumando esta linea nueva.
-        BigDecimal subtotal = producto.getPrecio()
+        BigDecimal subtotal = producto.getPrecioFinal()
                 .multiply(BigDecimal.valueOf(detallePedidoRequestDTO.getCantidad()));
         pedido.setTotal(pedido.getTotal().add(subtotal));
         pedidoRepository.save(pedido);
@@ -87,13 +88,14 @@ public class DetallePedidoServiceImpl implements DetallePedidoService {
         pedidoOriginal.setTotal(pedidoOriginal.getTotal().subtract(subtotalViejo));
 
         // El precio unitario se vuelve a tomar del precio actual del
-        // producto, no del body, por la misma razon que en el alta.
+        // producto (con descuento), no del body, por la misma razon que
+        // en el alta.
         detalle.setPedido(nuevoPedido);
         detalle.setProducto(nuevoProducto);
         detalle.setCantidad(detallePedidoRequestDTO.getCantidad());
-        detalle.setPrecioUnitario(nuevoProducto.getPrecio());
+        detalle.setPrecioUnitario(nuevoProducto.getPrecioFinal());
 
-        BigDecimal subtotalNuevo = nuevoProducto.getPrecio()
+        BigDecimal subtotalNuevo = nuevoProducto.getPrecioFinal()
                 .multiply(BigDecimal.valueOf(detallePedidoRequestDTO.getCantidad()));
         nuevoPedido.setTotal(nuevoPedido.getTotal().add(subtotalNuevo));
 

@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
  *
  * Relaciones:
  *  - "Clasifica" (Categoria 1:N Producto) -> categoria (ManyToOne).
- *  - "Distribuye" (Proveedor 1:N Producto) -> proveedor (ManyToOne).
  */
 @Entity
 @Table(name = "producto")
@@ -54,10 +53,6 @@ public class Producto {
     @ManyToOne
     @JoinColumn(name = "categoria_id", nullable = false)
     private Categoria categoria;
-
-    @ManyToOne
-    @JoinColumn(name = "proveedor_id")
-    private Proveedor proveedor;
 
     // No se guarda en la base (@Transient): se calcula al vuelo cada vez
     // que se serializa el producto a JSON, así el front siempre ve el

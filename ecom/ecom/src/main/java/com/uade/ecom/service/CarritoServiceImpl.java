@@ -48,7 +48,7 @@ public class CarritoServiceImpl implements CarritoService {
         if (SecurityUtils.esAdmin()) {
             return carritoRepository.findAll();
         }
-        return carritoRepository.findByUsuarioId(SecurityUtils.getUsuarioActual().getId());
+        return carritoRepository.findByUsuario_Id(SecurityUtils.getUsuarioActual().getId());
     }
 
     @Override
@@ -128,10 +128,10 @@ public class CarritoServiceImpl implements CarritoService {
             detalle.setPedido(pedido);
             detalle.setProducto(producto);
             detalle.setCantidad(item.getCantidad());
-            detalle.setPrecioUnitario(producto.getPrecio());
+            detalle.setPrecioUnitario(producto.getPrecioFinal());
             detallePedidoRepository.save(detalle);
 
-            total = total.add(producto.getPrecio().multiply(BigDecimal.valueOf(item.getCantidad())));
+            total = total.add(producto.getPrecioFinal().multiply(BigDecimal.valueOf(item.getCantidad())));
 
             producto.setStock(producto.getStock() - item.getCantidad());
             productoRepository.save(producto);

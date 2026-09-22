@@ -12,10 +12,8 @@ import com.uade.ecom.exception.DescuentoInvalidoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.model.Categoria;
 import com.uade.ecom.model.Producto;
-import com.uade.ecom.model.Proveedor;
 import com.uade.ecom.repository.CategoriaRepository;
 import com.uade.ecom.repository.ProductoRepository;
-import com.uade.ecom.repository.ProveedorRepository;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -25,9 +23,6 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Autowired
     private CategoriaRepository categoriaRepository;
-
-    @Autowired
-    private ProveedorRepository proveedorRepository;
 
     @Override
     public List<Producto> getAllProductos() {
@@ -53,13 +48,6 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCategoria(categoria);
         producto.setDescuentoPorcentaje(validarDescuento(productoRequestDTO.getDescuentoPorcentaje()));
 
-        if (productoRequestDTO.getProveedorId() != null) {
-            Proveedor proveedor = proveedorRepository.findById(productoRequestDTO.getProveedorId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "No se encontro ningun proveedor con id " + productoRequestDTO.getProveedorId()));
-            producto.setProveedor(proveedor);
-        }
-
         return productoRepository.save(producto);
     }
 
@@ -77,15 +65,6 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setStock(productoRequestDTO.getStock());
         producto.setCategoria(categoria);
         producto.setDescuentoPorcentaje(validarDescuento(productoRequestDTO.getDescuentoPorcentaje()));
-
-        if (productoRequestDTO.getProveedorId() != null) {
-            Proveedor proveedor = proveedorRepository.findById(productoRequestDTO.getProveedorId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "No se encontro ningun proveedor con id " + productoRequestDTO.getProveedorId()));
-            producto.setProveedor(proveedor);
-        } else {
-            producto.setProveedor(null);
-        }
 
         return productoRepository.save(producto);
     }

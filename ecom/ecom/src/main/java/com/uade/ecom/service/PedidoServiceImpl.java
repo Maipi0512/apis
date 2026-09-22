@@ -39,7 +39,7 @@ public class PedidoServiceImpl implements PedidoService {
         if (SecurityUtils.esAdmin()) {
             return pedidoRepository.findAll();
         }
-        return pedidoRepository.findByUsuarioId(SecurityUtils.getUsuarioActual().getId());
+        return pedidoRepository.findByUsuario_Id(SecurityUtils.getUsuarioActual().getId());
     }
 
     @Override

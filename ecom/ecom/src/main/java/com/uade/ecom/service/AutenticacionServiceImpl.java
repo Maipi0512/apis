@@ -11,7 +11,10 @@ import com.uade.ecom.dto.auth.AutenticacionResponseDTO;
 import com.uade.ecom.dto.auth.LoginRequestDTO;
 import com.uade.ecom.dto.auth.RegistroRequestDTO;
 import com.uade.ecom.exception.EntidadEnUsoException;
+import com.uade.ecom.model.Carrito;
+import com.uade.ecom.model.Rol;
 import com.uade.ecom.model.Usuario;
+import com.uade.ecom.repository.CarritoRepository;
 import com.uade.ecom.repository.UsuarioRepository;
 
 @Service
@@ -19,6 +22,9 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private CarritoRepository carritoRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -41,9 +47,15 @@ public class AutenticacionServiceImpl implements AutenticacionService {
         usuario.setApellido(registroRequestDTO.getApellido());
         usuario.setEmail(registroRequestDTO.getEmail());
         usuario.setPassword(passwordEncoder.encode(registroRequestDTO.getPassword()));
-        usuario.setRol(registroRequestDTO.getRol());
+        usuario.setRol(Rol.CLIENTE);
 
         usuarioRepository.save(usuario);
+
+        // Cada cliente nace con su carrito ya creado, para no obligar al
+        // front a pedirlo aparte con POST /carritos despues de loguearse.
+        Carrito carrito = new Carrito();
+        carrito.setUsuario(usuario);
+        carritoRepository.save(carrito);
 
         String token = jwtService.generateToken(usuario);
         return new AutenticacionResponseDTO(token);

@@ -6,13 +6,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.ItemCarritoRequestDTO;
+import com.uade.ecom.exception.AccesoDenegadoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
+import com.uade.ecom.exception.StockInsuficienteException;
 import com.uade.ecom.model.Carrito;
 import com.uade.ecom.model.ItemCarrito;
 import com.uade.ecom.model.Producto;
+import com.uade.ecom.model.Usuario;
 import com.uade.ecom.repository.CarritoRepository;
 import com.uade.ecom.repository.ItemCarritoRepository;
 import com.uade.ecom.repository.ProductoRepository;
+import com.uade.ecom.util.SecurityUtils;
 
 @Service
 public class ItemCarritoServiceImpl implements ItemCarritoService {
@@ -28,24 +32,33 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
 
     @Override
     public List<ItemCarrito> getAllItemsCarrito() {
-        return itemCarritoRepository.findAll();
+        if (SecurityUtils.esAdmin()) {
+            return itemCarritoRepository.findAll();
+        }
+        return itemCarritoRepository.findByCarrito_Usuario_Id(SecurityUtils.getUsuarioActual().getId());
     }
 
     @Override
     public ItemCarrito getItemCarritoById(Long id) {
-        return itemCarritoRepository.findById(id)
+        ItemCarrito itemCarrito = itemCarritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun item de carrito con id " + id));
+        validarDueño(itemCarrito);
+        return itemCarrito;
     }
 
     @Override
     public ItemCarrito createItemCarrito(ItemCarritoRequestDTO itemCarritoRequestDTO) {
-        Carrito carrito = carritoRepository.findById(itemCarritoRequestDTO.getCarritoId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro ningun carrito con id " + itemCarritoRequestDTO.getCarritoId()));
+        // El item siempre se agrega al carrito del usuario autenticado
+        // (el que se le crea automaticamente al registrarse), no a uno
+        // que el cliente elija por id.
+        Carrito carrito = carritoRepository
+                .findFirstByUsuario_IdOrderByIdAsc(SecurityUtils.getUsuarioActual().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("El usuario autenticado no tiene ningun carrito"));
 
         Producto producto = productoRepository.findById(itemCarritoRequestDTO.getProductoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ningun producto con id " + itemCarritoRequestDTO.getProductoId()));
+        validarStock(producto, itemCarritoRequestDTO.getCantidad());
 
         ItemCarrito itemCarrito = new ItemCarrito();
         itemCarrito.setCarrito(carrito);
@@ -59,26 +72,52 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
     public ItemCarrito updateItemCarrito(Long id, ItemCarritoRequestDTO itemCarritoRequestDTO) {
         ItemCarrito itemCarrito = itemCarritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun item de carrito con id " + id));
-
-        Carrito carrito = carritoRepository.findById(itemCarritoRequestDTO.getCarritoId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "No se encontro ningun carrito con id " + itemCarritoRequestDTO.getCarritoId()));
+        validarDueño(itemCarrito);
 
         Producto producto = productoRepository.findById(itemCarritoRequestDTO.getProductoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ningun producto con id " + itemCarritoRequestDTO.getProductoId()));
+        validarStock(producto, itemCarritoRequestDTO.getCantidad());
 
-        itemCarrito.setCarrito(carrito);
         itemCarrito.setProducto(producto);
         itemCarrito.setCantidad(itemCarritoRequestDTO.getCantidad());
 
         return itemCarritoRepository.save(itemCarrito);
     }
 
+    /**
+     * No se puede cargar en el carrito mas cantidad de la que hay en
+     * stock (antes esto se validaba recien en el checkout).
+     */
+    private void validarStock(Producto producto, Integer cantidad) {
+        if (cantidad > producto.getStock()) {
+            throw new StockInsuficienteException(
+                    "No hay stock suficiente de " + producto.getNombre()
+                            + " (pedido: " + cantidad + ", disponible: " + producto.getStock() + ")");
+        }
+    }
+
     @Override
     public void deleteItemCarrito(Long id) {
         ItemCarrito itemCarrito = itemCarritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun item de carrito con id " + id));
+        validarDueño(itemCarrito);
         itemCarritoRepository.delete(itemCarrito);
+    }
+
+    /**
+     * Un CLIENTE solo puede ver/tocar items de SU carrito; un ADMIN
+     * puede con cualquiera (mismo criterio que CarritoServiceImpl).
+     */
+    private void validarDueño(ItemCarrito itemCarrito) {
+        if (SecurityUtils.esAdmin()) {
+            return;
+        }
+        Usuario actual = SecurityUtils.getUsuarioActual();
+        Usuario dueño = itemCarrito.getCarrito().getUsuario();
+        if (dueño == null || !dueño.getId().equals(actual.getId())) {
+            throw new AccesoDenegadoException(
+                    "El item de carrito " + itemCarrito.getId() + " no pertenece al usuario autenticado");
+        }
     }
 }

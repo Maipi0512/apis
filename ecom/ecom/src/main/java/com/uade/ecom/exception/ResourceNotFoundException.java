@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 /**
  * Excepcion generica de "no encontrado" (404), reutilizable para
  * cualquier entidad del ecommerce (Direccion, Producto, Usuario, Pedido,
- * DetallePedido, Pago, Proveedor) y tambien para cuando, al crear algo,
- * la referencia (por ejemplo categoriaId o usuarioId) no existe.
+ * DetallePedido, Pago) y tambien para cuando, al crear algo, la
+ * referencia (por ejemplo categoriaId o usuarioId) no existe.
  *
  * Categoria tiene su propia CategoriaNotFoundException porque fue la que
  * armamos en la clase; el resto de las entidades nuevas reutilizan esta
