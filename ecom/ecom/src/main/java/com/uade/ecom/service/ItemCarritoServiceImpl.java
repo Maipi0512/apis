@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.ItemCarritoRequestDTO;
 import com.uade.ecom.exception.AccesoDenegadoException;
+import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.exception.StockInsuficienteException;
 import com.uade.ecom.model.Carrito;
@@ -48,6 +49,8 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
 
     @Override
     public ItemCarrito createItemCarrito(ItemCarritoRequestDTO itemCarritoRequestDTO) {
+        validarCantidad(itemCarritoRequestDTO.getCantidad());
+
         // El item siempre se agrega al carrito del usuario autenticado
         // (el que se le crea automaticamente al registrarse), no a uno
         // que el cliente elija por id.
@@ -70,6 +73,8 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
 
     @Override
     public ItemCarrito updateItemCarrito(Long id, ItemCarritoRequestDTO itemCarritoRequestDTO) {
+        validarCantidad(itemCarritoRequestDTO.getCantidad());
+
         ItemCarrito itemCarrito = itemCarritoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun item de carrito con id " + id));
         validarDueño(itemCarrito);
@@ -83,18 +88,6 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
         itemCarrito.setCantidad(itemCarritoRequestDTO.getCantidad());
 
         return itemCarritoRepository.save(itemCarrito);
-    }
-
-    /**
-     * No se puede cargar en el carrito mas cantidad de la que hay en
-     * stock (antes esto se validaba recien en el checkout).
-     */
-    private void validarStock(Producto producto, Integer cantidad) {
-        if (cantidad > producto.getStock()) {
-            throw new StockInsuficienteException(
-                    "No hay stock suficiente de " + producto.getNombre()
-                            + " (pedido: " + cantidad + ", disponible: " + producto.getStock() + ")");
-        }
     }
 
     @Override
@@ -118,6 +111,26 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
         if (dueño == null || !dueño.getId().equals(actual.getId())) {
             throw new AccesoDenegadoException(
                     "El item de carrito " + itemCarrito.getId() + " no pertenece al usuario autenticado");
+        }
+    }
+
+    private void validarCantidad(Integer cantidad) {
+        if (cantidad == null || cantidad <= 0) {
+            throw new DatoInvalidoException("La cantidad tiene que ser mayor a 0");
+        }
+    }
+
+    /**
+     * El checkout vuelve a validar esto (el stock puede cambiar entre que
+     * se agrega al carrito y se confirma la compra), pero avisar aca
+     * tambien evita que el carrito muestre cantidades que de entrada ya
+     * sabemos que no se van a poder comprar.
+     */
+    private void validarStock(Producto producto, Integer cantidad) {
+        if (cantidad > producto.getStock()) {
+            throw new StockInsuficienteException(
+                    "No hay stock suficiente de " + producto.getNombre()
+                            + " (pedido: " + cantidad + ", disponible: " + producto.getStock() + ")");
         }
     }
 }

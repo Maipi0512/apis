@@ -47,12 +47,15 @@ public class AutenticacionServiceImpl implements AutenticacionService {
         usuario.setApellido(registroRequestDTO.getApellido());
         usuario.setEmail(registroRequestDTO.getEmail());
         usuario.setPassword(passwordEncoder.encode(registroRequestDTO.getPassword()));
+        usuario.setDireccion(registroRequestDTO.getDireccion());
+        // El registro publico siempre crea CLIENTE. El unico ADMIN lo
+        // crea AdminSeeder al arrancar la app, no este endpoint.
         usuario.setRol(Rol.CLIENTE);
 
-        usuarioRepository.save(usuario);
+        usuario = usuarioRepository.save(usuario);
 
-        // Cada cliente nace con su carrito ya creado, para no obligar al
-        // front a pedirlo aparte con POST /carritos despues de loguearse.
+        // Todo cliente arranca con su carrito ya armado -- no hace falta
+        // un POST /carritos aparte antes de poder empezar a comprar.
         Carrito carrito = new Carrito();
         carrito.setUsuario(usuario);
         carritoRepository.save(carrito);

@@ -49,12 +49,19 @@ public class Usuario implements UserDetails {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    // @JsonIgnore: nunca se devuelve el hash de la password en las
-    // respuestas de la API, sin importar desde donde se serialice este
-    // Usuario (login, carrito, pedido, etc.).
-    @JsonIgnore
+    // @JsonIgnore: el hash de la password nunca tiene que viajar en un
+    // JSON de respuesta, ni siquiera cuando Usuario aparece anidado
+    // dentro de otra entidad (Pedido.usuario, Carrito.usuario, etc.).
     @Column(name = "password", nullable = false)
+    @JsonIgnore
     private String password;
+
+    // Nullable a proposito: no todos los usuarios cargan direccion al
+    // registrarse (ej. un ADMIN no la necesita). Es un campo simple, no
+    // una entidad aparte -- la tabla "direccion" del diseño original
+    // quedo sin uso, se reemplaza por esto.
+    @Column(name = "direccion")
+    private String direccion;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)

@@ -1,6 +1,7 @@
 package com.uade.ecom.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.uade.ecom.model.Carrito;
-import com.uade.ecom.model.Pedido;
+import com.uade.ecom.dto.CarritoResponseDTO;
+import com.uade.ecom.dto.PedidoResponseDTO;
 import com.uade.ecom.service.CarritoService;
 
 @RestController
@@ -24,26 +25,29 @@ public class CarritoController {
     private CarritoService carritoService;
 
     @GetMapping
-    public List<Carrito> getAllCarritos() {
-        return carritoService.getAllCarritos();
+    public List<CarritoResponseDTO> getAllCarritos() {
+        return carritoService.getAllCarritos().stream()
+                .map(CarritoResponseDTO::from)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public Carrito getCarritoById(@PathVariable Long id) {
-        return carritoService.getCarritoById(id);
+    public CarritoResponseDTO getCarritoById(@PathVariable Long id) {
+        return CarritoResponseDTO.from(carritoService.getCarritoById(id));
     }
 
     /**
-     * Por ahora un carrito se crea "vacio" (sin usuario todavia). Cuando
-     * tengan login, este metodo va a tomar el usuario autenticado.
+     * En general no hace falta llamar esto: todo CLIENTE ya se registra
+     * con su carrito creado (ver AutenticacionServiceImpl.registrar()).
+     * Se deja disponible por si un ADMIN necesita armar uno a mano.
      */
     @PostMapping
-    public Carrito createCarrito() {
-        return carritoService.createCarrito();
+    public CarritoResponseDTO createCarrito() {
+        return CarritoResponseDTO.from(carritoService.createCarrito());
     }
 
-    // No hay PUT: Carrito no tiene mas campos propios que el id (todavia
-    // no esta asociado a un Usuario), asi que no hay nada que modificar.
+    // No hay PUT: Carrito no tiene mas campos propios que el id y el
+    // dueño, asi que no hay nada que modificar.
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -56,7 +60,7 @@ public class CarritoController {
      * DetallePedido), descuenta el stock y vacia el carrito.
      */
     @PostMapping("/{id}/checkout")
-    public Pedido checkout(@PathVariable Long id) {
-        return carritoService.checkout(id);
+    public PedidoResponseDTO checkout(@PathVariable Long id) {
+        return PedidoResponseDTO.from(carritoService.checkout(id));
     }
 }

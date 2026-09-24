@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.uade.ecom.dto.PagoRequestDTO;
+import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.PagoInvalidoException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.model.Pago;
@@ -101,6 +102,10 @@ public class PagoServiceImpl implements PagoService {
      * viejo del pago que se esta editando como si ya estuviera pagado.
      */
     private void validarPagoPermitido(Pedido pedido, BigDecimal monto, Long pagoIdAExcluir) {
+        if (monto == null || monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new DatoInvalidoException("El monto del pago tiene que ser mayor a 0");
+        }
+
         if (ESTADO_CANCELADO.equals(pedido.getEstado())) {
             throw new PagoInvalidoException(
                     "No se puede registrar un pago para el pedido " + pedido.getId() + " porque esta CANCELADO");
