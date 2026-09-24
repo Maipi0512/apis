@@ -1,5 +1,6 @@
 package com.uade.ecom.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.ecom.dto.CarritoResponseDTO;
 import com.uade.ecom.dto.PedidoResponseDTO;
+import com.uade.ecom.model.Carrito;
 import com.uade.ecom.service.CarritoService;
 
 @RestController
@@ -27,13 +29,14 @@ public class CarritoController {
     @GetMapping
     public List<CarritoResponseDTO> getAllCarritos() {
         return carritoService.getAllCarritos().stream()
-                .map(CarritoResponseDTO::from)
+                .map(carrito -> CarritoResponseDTO.from(carrito, carritoService.getItemsDeCarrito(carrito.getId())))
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public CarritoResponseDTO getCarritoById(@PathVariable Long id) {
-        return CarritoResponseDTO.from(carritoService.getCarritoById(id));
+        Carrito carrito = carritoService.getCarritoById(id);
+        return CarritoResponseDTO.from(carrito, carritoService.getItemsDeCarrito(id));
     }
 
     /**
@@ -43,7 +46,8 @@ public class CarritoController {
      */
     @PostMapping
     public CarritoResponseDTO createCarrito() {
-        return CarritoResponseDTO.from(carritoService.createCarrito());
+        Carrito carrito = carritoService.createCarrito();
+        return CarritoResponseDTO.from(carrito, Collections.emptyList());
     }
 
     // No hay PUT: Carrito no tiene mas campos propios que el id y el

@@ -60,6 +60,11 @@ public class CarritoServiceImpl implements CarritoService {
     }
 
     @Override
+    public List<ItemCarrito> getItemsDeCarrito(Long carritoId) {
+        return itemCarritoRepository.findByCarritoId(carritoId);
+    }
+
+    @Override
     public Carrito createCarrito() {
         Carrito carrito = new Carrito();
         carrito.setUsuario(SecurityUtils.getUsuarioActual());
