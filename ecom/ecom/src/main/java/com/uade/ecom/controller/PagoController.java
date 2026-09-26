@@ -36,6 +36,7 @@ public class PagoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Pago createPago(@RequestBody PagoRequestDTO pagoRequestDTO) {
         return pagoService.createPago(pagoRequestDTO);
     }

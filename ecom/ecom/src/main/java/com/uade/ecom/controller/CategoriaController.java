@@ -45,6 +45,7 @@ public class CategoriaController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Categoria createCategoria(@RequestBody CategoriaRequestDTO categoriaRequestDTO) {
         return categoriaService.createCategoria(categoriaRequestDTO);
     }

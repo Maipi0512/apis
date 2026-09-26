@@ -44,6 +44,7 @@ public class PedidoController {
      * autenticado; se le van agregando DetallePedido despues.
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public PedidoResponseDTO createPedido() {
         return PedidoResponseDTO.from(pedidoService.createPedido());
     }

@@ -36,6 +36,7 @@ public class DetallePedidoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public DetallePedido createDetallePedido(@RequestBody DetallePedidoRequestDTO detallePedidoRequestDTO) {
         return detallePedidoService.createDetallePedido(detallePedidoRequestDTO);
     }

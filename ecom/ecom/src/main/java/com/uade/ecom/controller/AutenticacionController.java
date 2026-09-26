@@ -1,9 +1,11 @@
 package com.uade.ecom.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.ecom.dto.auth.AutenticacionResponseDTO;
@@ -19,6 +21,7 @@ public class AutenticacionController {
     private AutenticacionService autenticacionService;
 
     @PostMapping("/registro")
+    @ResponseStatus(HttpStatus.CREATED)
     public AutenticacionResponseDTO registrar(@RequestBody RegistroRequestDTO registroRequestDTO) {
         return autenticacionService.registrar(registroRequestDTO);
     }

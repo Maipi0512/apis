@@ -45,6 +45,7 @@ public class CarritoController {
      * Se deja disponible por si un ADMIN necesita armar uno a mano.
      */
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public CarritoResponseDTO createCarrito() {
         Carrito carrito = carritoService.createCarrito();
         return CarritoResponseDTO.from(carrito, Collections.emptyList());
@@ -64,6 +65,7 @@ public class CarritoController {
      * DetallePedido), descuenta el stock y vacia el carrito.
      */
     @PostMapping("/{id}/checkout")
+    @ResponseStatus(HttpStatus.CREATED)
     public PedidoResponseDTO checkout(@PathVariable Long id) {
         return PedidoResponseDTO.from(carritoService.checkout(id));
     }

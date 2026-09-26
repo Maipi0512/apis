@@ -36,6 +36,7 @@ public class ItemCarritoController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ItemCarrito createItemCarrito(@RequestBody ItemCarritoRequestDTO itemCarritoRequestDTO) {
         return itemCarritoService.createItemCarrito(itemCarritoRequestDTO);
     }
