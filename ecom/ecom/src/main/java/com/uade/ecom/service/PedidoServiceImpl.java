@@ -1,7 +1,6 @@
 package com.uade.ecom.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,16 +8,18 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.uade.ecom.dto.FacturaDTO;
+import com.uade.ecom.dto.ClientePedidoDTO;
 import com.uade.ecom.dto.ItemFacturaDTO;
-import com.uade.ecom.dto.PagoFacturaDTO;
+import com.uade.ecom.dto.PedidoResponseDTO;
 import com.uade.ecom.dto.PedidoUpdateDTO;
 import com.uade.ecom.exception.AccesoDenegadoException;
 import com.uade.ecom.exception.PedidoVacioException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.exception.TransicionEstadoInvalidaException;
 import com.uade.ecom.model.DetallePedido;
+import com.uade.ecom.model.Pago;
 import com.uade.ecom.model.Pedido;
 import com.uade.ecom.model.Producto;
 import com.uade.ecom.model.Usuario;
@@ -35,9 +36,10 @@ public class PedidoServiceImpl implements PedidoService {
     private static final String ESTADO_CANCELADO = "CANCELADO";
 
     /**
-     * Transiciones de estado permitidas. Un pedido nuevo arranca en
-     * PENDIENTE (ver createPedido) y de ahi solo puede avanzar por estos
-     * caminos -- ENTREGADO y CANCELADO son estados finales.
+     * Transiciones de estado permitidas. Un pedido nuevo nace PAGADO (se
+     * crea al pagar, ver CarritoServiceImpl.crearPedidoPagado) y de ahi
+     * solo puede avanzar por estos caminos -- ENTREGADO y CANCELADO son
+     * estados finales. PENDIENTE queda por los pedidos viejos de la base.
      */
     private static final Map<String, Set<String>> TRANSICIONES_VALIDAS = Map.of(
             "PENDIENTE", Set.of(ESTADO_PAGADO, ESTADO_CANCELADO),
@@ -58,31 +60,26 @@ public class PedidoServiceImpl implements PedidoService {
     @Autowired
     private ProductoRepository productoRepository;
 
+    // readOnly: el producto trae la imagen como @Lob, y Postgres solo deja
+    // leerla dentro de una transaccion (si no: "Unable to access lob stream")
+    @Transactional(readOnly = true)
     @Override
-    public List<Pedido> getAllPedidos() {
-        if (SecurityUtils.esAdmin()) {
-            return pedidoRepository.findAll();
-        }
-        return pedidoRepository.findByUsuario_Id(SecurityUtils.getUsuarioActual().getId());
+    public List<PedidoResponseDTO> getAllPedidos() {
+        List<Pedido> pedidos = SecurityUtils.esAdmin()
+                ? pedidoRepository.findAll()
+                : pedidoRepository.findByUsuario_Id(SecurityUtils.getUsuarioActual().getId());
+        return pedidos.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public Pedido getPedidoById(Long id) {
+    public PedidoResponseDTO getPedidoById(Long id) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
         validarDueño(pedido);
-        return pedido;
-    }
-
-    @Override
-    public Pedido createPedido() {
-        Pedido pedido = new Pedido();
-        pedido.setFecha(LocalDate.now());
-        pedido.setEstado("PENDIENTE");
-        pedido.setTotal(BigDecimal.ZERO);
-        pedido.setUsuario(SecurityUtils.getUsuarioActual());
-
-        return pedidoRepository.save(pedido);
+        return toResponse(pedido);
     }
 
     /**
@@ -91,7 +88,8 @@ public class PedidoServiceImpl implements PedidoService {
      * ADMIN, asi que aca no hace falta validarDueño de nuevo.
      */
     @Override
-    public Pedido updatePedido(Long id, PedidoUpdateDTO pedidoUpdateDTO) {
+    @Transactional
+    public PedidoResponseDTO updatePedido(Long id, PedidoUpdateDTO pedidoUpdateDTO) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
 
@@ -115,7 +113,7 @@ public class PedidoServiceImpl implements PedidoService {
         }
 
         pedido.setEstado(estadoNuevo);
-        return pedidoRepository.save(pedido);
+        return toResponse(pedidoRepository.save(pedido));
     }
 
     @Override
@@ -141,34 +139,35 @@ public class PedidoServiceImpl implements PedidoService {
         }
     }
 
-    @Override
-    public FacturaDTO getFactura(Long id) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
-        validarDueño(pedido);
-
-        List<ItemFacturaDTO> items = detallePedidoRepository.findByPedidoId(id).stream()
+    /**
+     * Arma la compra completa (la "factura"): el pedido con sus
+     * DetallePedido y el metodo con que se pago.
+     */
+    private PedidoResponseDTO toResponse(Pedido pedido) {
+        List<ItemFacturaDTO> items = detallePedidoRepository.findByPedidoId(pedido.getId()).stream()
                 .map(this::toItemFactura)
                 .collect(Collectors.toList());
 
-        List<PagoFacturaDTO> pagos = pagoRepository.findByPedidoId(id).stream()
-                .map(pago -> new PagoFacturaDTO(pago.getMetodoPago(), pago.getMonto()))
-                .collect(Collectors.toList());
+        // Los pedidos nuevos tienen un solo pago; los viejos de la base
+        // pueden tener varios (pagos parciales) o ninguno.
+        String metodoPago = pagoRepository.findByPedidoId(pedido.getId()).stream()
+                .map(Pago::getMetodoPago)
+                .distinct()
+                .collect(Collectors.joining(", "));
 
-        BigDecimal totalPagado = pagos.stream()
-                .map(PagoFacturaDTO::getMonto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Los datos del comprador solo los ve el ADMIN (ver PedidoResponseDTO).
+        ClientePedidoDTO cliente = SecurityUtils.esAdmin() && pedido.getUsuario() != null
+                ? ClientePedidoDTO.from(pedido.getUsuario())
+                : null;
 
-        FacturaDTO factura = new FacturaDTO();
-        factura.setNumeroPedido(pedido.getId());
-        factura.setFecha(pedido.getFecha());
-        factura.setEstado(pedido.getEstado());
-        factura.setItems(items);
-        factura.setTotal(pedido.getTotal());
-        factura.setPagos(pagos);
-        factura.setTotalPagado(totalPagado);
-        factura.setSaldoPendiente(pedido.getTotal().subtract(totalPagado));
-        return factura;
+        return new PedidoResponseDTO(
+                pedido.getId(),
+                pedido.getFecha(),
+                pedido.getEstado(),
+                cliente,
+                items,
+                metodoPago.isEmpty() ? null : metodoPago,
+                pedido.getTotal());
     }
 
     private boolean esTransicionValida(String estadoActual, String estadoNuevo) {
@@ -179,14 +178,14 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     /**
-     * Al cancelar un pedido, el stock que el checkout le habia
-     * descontado a cada producto tiene que volver -- si no, el
-     * inventario real queda mas bajo que el disponible de verdad.
+     * Al cancelar un pedido, el stock que se le desconto a cada producto
+     * al pagar tiene que volver -- si no, el inventario real queda mas
+     * bajo que el disponible de verdad.
      */
     private void restaurarStock(List<DetallePedido> detalles) {
         for (DetallePedido detalle : detalles) {
             Producto producto = detalle.getProducto();
-            producto.setStock(producto.getStock() + detalle.getCantidad());
+            producto.reponerStock(detalle.getVariante(), detalle.getCantidad());
             productoRepository.save(producto);
         }
     }
@@ -194,8 +193,12 @@ public class PedidoServiceImpl implements PedidoService {
     private ItemFacturaDTO toItemFactura(DetallePedido detalle) {
         BigDecimal subtotal = detalle.getPrecioUnitario().multiply(BigDecimal.valueOf(detalle.getCantidad()));
         return new ItemFacturaDTO(
+                detalle.getProducto().getId(),
                 detalle.getProducto().getNombre(),
+                detalle.getVariante() != null ? detalle.getVariante().getColor() : null,
+                detalle.getVariante() != null ? detalle.getVariante().getNumero() : null,
                 detalle.getCantidad(),
+                detalle.getProducto().getUnidadMedida(),
                 detalle.getPrecioUnitario(),
                 subtotal);
     }

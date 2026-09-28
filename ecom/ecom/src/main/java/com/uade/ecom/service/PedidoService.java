@@ -2,25 +2,24 @@ package com.uade.ecom.service;
 
 import java.util.List;
 
-import com.uade.ecom.dto.FacturaDTO;
+import com.uade.ecom.dto.PedidoResponseDTO;
 import com.uade.ecom.dto.PedidoUpdateDTO;
-import com.uade.ecom.model.Pedido;
 
+/**
+ * Los pedidos no se crean por aca: nacen al pagar el carrito (ver
+ * PagoServiceImpl.pagar()). Cada pedido se devuelve con sus items y su
+ * pago, como una factura.
+ */
 public interface PedidoService {
 
-    List<Pedido> getAllPedidos();
+    /**
+     * "Mis compras" para un CLIENTE; todos los pedidos para un ADMIN.
+     */
+    List<PedidoResponseDTO> getAllPedidos();
 
-    Pedido getPedidoById(Long id);
+    PedidoResponseDTO getPedidoById(Long id);
 
-    Pedido createPedido();
-
-    Pedido updatePedido(Long id, PedidoUpdateDTO pedidoUpdateDTO);
+    PedidoResponseDTO updatePedido(Long id, PedidoUpdateDTO pedidoUpdateDTO);
 
     void deletePedido(Long id);
-
-    /**
-     * Reporte tipo "factura" de un pedido: el pedido, sus items
-     * (DetallePedido) y sus pagos, con los totales ya calculados.
-     */
-    FacturaDTO getFactura(Long id);
 }

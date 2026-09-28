@@ -9,4 +9,6 @@ import com.uade.ecom.model.Pago;
 public interface PagoRepository extends JpaRepository<Pago, Long> {
 
     List<Pago> findByPedidoId(Long pedidoId);
+
+    List<Pago> findByPedido_Usuario_Id(Long usuarioId);
 }

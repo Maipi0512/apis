@@ -2,31 +2,25 @@ package com.uade.ecom.service;
 
 import java.util.List;
 
-import com.uade.ecom.model.Carrito;
 import com.uade.ecom.model.ItemCarrito;
 import com.uade.ecom.model.Pedido;
 
+/**
+ * El cliente siempre opera sobre SU carrito (el que se le crea al
+ * registrarse, ver AutenticacionServiceImpl.registrar()), nunca elige
+ * uno por id.
+ */
 public interface CarritoService {
 
-    List<Carrito> getAllCarritos();
+    List<ItemCarrito> getItemsDeMiCarrito();
 
-    Carrito getCarritoById(Long id);
-
-    /**
-     * Items de un carrito. Asume que el carrito ya se valido con
-     * getCarritoById (el dueño ya tiene que estar confirmado antes de
-     * llamar esto).
-     */
-    List<ItemCarrito> getItemsDeCarrito(Long carritoId);
-
-    Carrito createCarrito();
-
-    void deleteCarrito(Long id);
+    void vaciarMiCarrito();
 
     /**
-     * Confirma la compra: convierte los ItemCarrito en un Pedido con sus
-     * DetallePedido, descuenta el stock de cada Producto y vacia el
-     * carrito.
+     * Convierte el carrito del usuario autenticado en un Pedido PAGADO
+     * (con sus DetallePedido), descuenta el stock y vacia el carrito.
+     * No se expone como endpoint: lo llama PagoServiceImpl, porque el
+     * pedido recien existe una vez que se paga.
      */
-    Pedido checkout(Long carritoId);
+    Pedido crearPedidoPagado();
 }

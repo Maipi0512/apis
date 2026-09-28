@@ -1,17 +1,17 @@
 package com.uade.ecom.dto;
 
-import java.math.BigDecimal;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Lo unico que elige el cliente al pagar es el metodo de pago. El monto
+ * sale del carrito del usuario autenticado y el pedido se crea recien
+ * cuando el pago se registra (como en Mercado Pago), asi que ni monto ni
+ * pedidoId vienen en el body.
+ */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class PagoRequestDTO {
 
-    private Long pedidoId;
     private String metodoPago;
-    private BigDecimal monto;
 }

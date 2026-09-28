@@ -1,19 +1,21 @@
 package com.uade.ecom.service;
 
-import java.util.List;
-
 import com.uade.ecom.dto.ItemCarritoRequestDTO;
-import com.uade.ecom.model.ItemCarrito;
 
+/**
+ * Items del carrito del usuario autenticado, identificados por producto
+ * y variante (cada combinacion aparece una sola vez en el carrito).
+ * varianteId es null para productos sin variantes.
+ */
 public interface ItemCarritoService {
 
-    List<ItemCarrito> getAllItemsCarrito();
+    /**
+     * Agrega el producto (en la variante elegida) al carrito; si ya
+     * estaba, le suma la cantidad.
+     */
+    void agregar(ItemCarritoRequestDTO itemCarritoRequestDTO);
 
-    ItemCarrito getItemCarritoById(Long id);
+    void cambiarCantidad(Long productoId, Long varianteId, Integer cantidad);
 
-    ItemCarrito createItemCarrito(ItemCarritoRequestDTO itemCarritoRequestDTO);
-
-    ItemCarrito updateItemCarrito(Long id, ItemCarritoRequestDTO itemCarritoRequestDTO);
-
-    void deleteItemCarrito(Long id);
+    void quitar(Long productoId, Long varianteId);
 }

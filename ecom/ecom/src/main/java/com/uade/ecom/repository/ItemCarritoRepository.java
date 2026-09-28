@@ -10,5 +10,11 @@ public interface ItemCarritoRepository extends JpaRepository<ItemCarrito, Long> 
 
     List<ItemCarrito> findByCarritoId(Long carritoId);
 
-    List<ItemCarrito> findByCarrito_Usuario_Id(Long usuarioId);
+    // Lista y no Optional: carritos armados antes de que la linea se
+    // identificara por producto pueden tener el mismo producto repetido.
+    // El filtro por variante se hace en ItemCarritoServiceImpl (la variante
+    // puede ser null).
+    List<ItemCarrito> findByCarritoIdAndProductoId(Long carritoId, Long productoId);
+
+    List<ItemCarrito> findByVariante_Id(Long varianteId);
 }

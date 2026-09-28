@@ -11,4 +11,6 @@ public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Lo
     List<DetallePedido> findByPedidoId(Long pedidoId);
 
     boolean existsByProductoId(Long productoId);
+
+    boolean existsByVariante_Id(Long varianteId);
 }

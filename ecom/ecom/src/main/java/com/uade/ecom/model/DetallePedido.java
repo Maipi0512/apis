@@ -46,4 +46,11 @@ public class DetallePedido {
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
+
+    // Variante comprada (color/numero); null si el producto no tiene.
+    // Se usa para mostrarla en la compra y para reponer el stock de esa
+    // variante si el pedido se cancela.
+    @ManyToOne
+    @JoinColumn(name = "variante_id")
+    private VarianteProducto variante;
 }

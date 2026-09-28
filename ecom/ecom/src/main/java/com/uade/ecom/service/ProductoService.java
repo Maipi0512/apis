@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.ecom.dto.ProductoRequestDTO;
+import com.uade.ecom.dto.VarianteProductoRequestDTO;
 import com.uade.ecom.model.Producto;
 
 public interface ProductoService {
@@ -32,4 +33,15 @@ public interface ProductoService {
      * todavia no tiene ninguna imagen cargada.
      */
     Producto getImagenProducto(Long id);
+
+    /**
+     * ABM de variantes (color, numero o ambos; solo ADMIN). Cada uno
+     * devuelve el producto actualizado, con el stock total ya recalculado
+     * como la suma de sus variantes.
+     */
+    Producto agregarVariante(Long productoId, VarianteProductoRequestDTO varianteProductoRequestDTO);
+
+    Producto actualizarVariante(Long productoId, Long varianteId, VarianteProductoRequestDTO varianteProductoRequestDTO);
+
+    Producto eliminarVariante(Long productoId, Long varianteId);
 }

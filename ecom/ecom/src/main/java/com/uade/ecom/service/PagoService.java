@@ -11,9 +11,9 @@ public interface PagoService {
 
     Pago getPagoById(Long id);
 
-    Pago createPago(PagoRequestDTO pagoRequestDTO);
-
-    Pago updatePago(Long id, PagoRequestDTO pagoRequestDTO);
-
-    void deletePago(Long id);
+    /**
+     * Paga el carrito del usuario autenticado: crea el Pedido (ya PAGADO)
+     * y registra el Pago por el total del carrito.
+     */
+    Pago pagar(PagoRequestDTO pagoRequestDTO);
 }

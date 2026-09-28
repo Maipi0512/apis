@@ -10,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,15 +33,10 @@ public class Carrito {
     @Column(name = "id_carrito")
     private Long id;
 
-    // No se expone el Usuario completo en el JSON (nombre, email, etc.):
-    // alcanza con el id para que el front sepa de quien es el carrito.
+    // El dueño es dato interno: nunca se expone en el JSON (ni el Usuario
+    // ni su id), el cliente siempre ve "su" carrito por el token.
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
-
-    @Transient
-    public Long getUsuarioId() {
-        return usuario == null ? null : usuario.getId();
-    }
 }

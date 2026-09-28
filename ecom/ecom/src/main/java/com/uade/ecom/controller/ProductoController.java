@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.uade.ecom.dto.ProductoRequestDTO;
+import com.uade.ecom.dto.VarianteProductoRequestDTO;
 import com.uade.ecom.model.Producto;
 import com.uade.ecom.service.ProductoService;
 
@@ -54,6 +55,30 @@ public class ProductoController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProducto(@PathVariable Long id) {
         productoService.deleteProducto(id);
+    }
+
+    /**
+     * Variantes del producto: por color (hilos), por numero (agujas) o
+     * ambos (botones), cada una con su stock. Solo ADMIN, igual que
+     * cualquier POST/PUT/DELETE de /productos. Se ven en el GET del
+     * producto; el stock del producto es la suma de sus variantes.
+     */
+    @PostMapping("/{id}/variantes")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Producto agregarVariante(@PathVariable Long id,
+            @RequestBody VarianteProductoRequestDTO varianteProductoRequestDTO) {
+        return productoService.agregarVariante(id, varianteProductoRequestDTO);
+    }
+
+    @PutMapping("/{id}/variantes/{varianteId}")
+    public Producto actualizarVariante(@PathVariable Long id, @PathVariable Long varianteId,
+            @RequestBody VarianteProductoRequestDTO varianteProductoRequestDTO) {
+        return productoService.actualizarVariante(id, varianteId, varianteProductoRequestDTO);
+    }
+
+    @DeleteMapping("/{id}/variantes/{varianteId}")
+    public Producto eliminarVariante(@PathVariable Long id, @PathVariable Long varianteId) {
+        return productoService.eliminarVariante(id, varianteId);
     }
 
     /**

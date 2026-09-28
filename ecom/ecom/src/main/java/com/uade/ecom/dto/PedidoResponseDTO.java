@@ -2,37 +2,36 @@ package com.uade.ecom.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
-import com.uade.ecom.model.Pedido;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Lo que efectivamente devuelven los endpoints de /pedidos. Nunca el
- * Usuario completo (nombre, email, direccion): solo su id. Antes estos
- * endpoints devolvian la entidad Pedido tal cual, que trae el Usuario
- * dueño anidado -- eso filtraba sus datos de registro en cada
- * GET /pedidos, aunque la password ya tenga @JsonIgnore.
+ * Una compra, tal como la ve el cliente en "Mis compras": numero,
+ * fecha, estado, los productos que llevo (sus DetallePedido), como pago
+ * y el total. Es tambien la factura del pedido.
+ *
+ * "cliente" solo se completa cuando consulta un ADMIN (necesita saber a
+ * quien despacharle); para un CLIENTE queda null y no aparece en el
+ * JSON, porque solo ve sus propias compras.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PedidoResponseDTO {
 
-    private Long id;
+    private Long numeroPedido;
     private LocalDate fecha;
     private String estado;
-    private BigDecimal total;
-    private Long usuarioId;
 
-    public static PedidoResponseDTO from(Pedido pedido) {
-        return new PedidoResponseDTO(
-                pedido.getId(),
-                pedido.getFecha(),
-                pedido.getEstado(),
-                pedido.getTotal(),
-                pedido.getUsuario() != null ? pedido.getUsuario().getId() : null);
-    }
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private ClientePedidoDTO cliente;
+
+    private List<ItemFacturaDTO> items;
+    private String metodoPago;
+    private BigDecimal total;
 }

@@ -38,4 +38,9 @@ public class ItemCarrito {
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
+
+    // Variante elegida (color/numero); null si el producto no tiene.
+    @ManyToOne
+    @JoinColumn(name = "variante_id")
+    private VarianteProducto variante;
 }
