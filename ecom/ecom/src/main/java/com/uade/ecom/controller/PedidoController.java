@@ -45,6 +45,16 @@ public class PedidoController {
         return pedidoService.updatePedido(id, pedidoUpdateDTO);
     }
 
+    /**
+     * El cliente cancela su propia compra mientras no se haya enviado
+     * (el stock vuelve). No lleva body. El PUT de arriba, que cambia a
+     * cualquier estado, sigue siendo solo para ADMIN.
+     */
+    @PutMapping("/{id}/cancelar")
+    public PedidoResponseDTO cancelarPedido(@PathVariable Long id) {
+        return pedidoService.cancelarPedido(id);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deletePedido(@PathVariable Long id) {

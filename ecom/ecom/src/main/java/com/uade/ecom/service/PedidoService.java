@@ -21,5 +21,10 @@ public interface PedidoService {
 
     PedidoResponseDTO updatePedido(Long id, PedidoUpdateDTO pedidoUpdateDTO);
 
+    /**
+     * El CLIENTE cancela su propia compra, mientras no se haya enviado.
+     */
+    PedidoResponseDTO cancelarPedido(Long id);
+
     void deletePedido(Long id);
 }

@@ -1,16 +1,22 @@
 package com.uade.ecom.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Cadena de filtros de Spring Security: que endpoints son publicos y
@@ -27,6 +33,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * mio o soy admin" para Carrito y Pedido se hace en el service (ver
  * CarritoServiceImpl/PedidoServiceImpl), porque Spring Security por si
  * solo no sabe de quien es cada fila.
+ *
+ * CORS: el frontend (Vite, http://localhost:5173) corre en otro puerto que
+ * el backend, y el navegador bloquea esos pedidos salvo que el backend
+ * diga que ese origen esta permitido. Sin esto, ningun fetch del front
+ * llega (ni siquiera el login).
  */
 @Configuration
 @EnableWebSecurity
@@ -48,6 +59,7 @@ public class SeguridadConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
@@ -59,6 +71,9 @@ public class SeguridadConfig {
                         .hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/categorias/**", "/productos/**")
                         .hasAuthority("ADMIN")
+                        // va antes que la regla de abajo: cancelar su propio pedido
+                        // lo puede hacer el CLIENTE (el service valida que sea suyo)
+                        .requestMatchers(HttpMethod.PUT, "/pedidos/*/cancelar").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/pedidos/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
@@ -69,5 +84,17 @@ public class SeguridadConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }
