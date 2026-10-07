@@ -23,6 +23,7 @@ import com.uade.ecom.repository.CategoriaRepository;
 import com.uade.ecom.repository.DetallePedidoRepository;
 import com.uade.ecom.repository.ItemCarritoRepository;
 import com.uade.ecom.repository.ProductoRepository;
+import com.uade.ecom.util.Validaciones;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -231,6 +232,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
+    @Transactional
     public void deleteProducto(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun producto con id " + id));
@@ -239,6 +241,10 @@ public class ProductoServiceImpl implements ProductoService {
             throw new EntidadEnUsoException(
                     "No se puede eliminar el producto " + id + " porque tiene pedidos asociados");
         }
+
+        // Si solo esta en carritos (nadie lo compro), se saca de esos
+        // carritos: si no, la base rechaza el borrado por la clave foranea.
+        itemCarritoRepository.deleteAll(itemCarritoRepository.findByProductoId(id));
 
         productoRepository.delete(producto);
     }
@@ -281,6 +287,12 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     private void validarDatosProducto(ProductoRequestDTO dto) {
+        if (Validaciones.estaVacio(dto.getNombre())) {
+            throw new DatoInvalidoException("El nombre del producto es obligatorio");
+        }
+        if (dto.getCategoriaId() == null) {
+            throw new DatoInvalidoException("Hay que indicar la categoria del producto (categoriaId)");
+        }
         if (dto.getPrecio() == null || dto.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
             throw new DatoInvalidoException("El precio del producto tiene que ser mayor a 0");
         }

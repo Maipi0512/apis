@@ -8,10 +8,12 @@ import org.springframework.stereotype.Service;
 import com.uade.ecom.dto.CategoriaRequestDTO;
 import com.uade.ecom.exception.CategoriaDuplicadaException;
 import com.uade.ecom.exception.CategoriaNotFoundException;
+import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.EntidadEnUsoException;
 import com.uade.ecom.model.Categoria;
 import com.uade.ecom.repository.CategoriaRepository;
 import com.uade.ecom.repository.ProductoRepository;
+import com.uade.ecom.util.Validaciones;
 
 /**
  * Implementacion de CategoriaService: aca vive la logica de negocio.
@@ -39,6 +41,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public Categoria createCategoria(CategoriaRequestDTO categoriaRequestDTO) {
+        validarNombre(categoriaRequestDTO);
         boolean existeDuplicada = categoriaRepository.findAll().stream()
                 .anyMatch(categoria -> categoria.getNombre()
                         .equalsIgnoreCase(categoriaRequestDTO.getNombre()));
@@ -56,6 +59,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public Categoria updateCategoria(Long id, CategoriaRequestDTO categoriaRequestDTO) {
+        validarNombre(categoriaRequestDTO);
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new CategoriaNotFoundException("No se encontro ninguna categoria con id " + id));
 
@@ -83,5 +87,11 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
 
         categoriaRepository.delete(categoria);
+    }
+
+    private void validarNombre(CategoriaRequestDTO dto) {
+        if (Validaciones.estaVacio(dto.getNombre())) {
+            throw new DatoInvalidoException("El nombre de la categoria es obligatorio");
+        }
     }
 }

@@ -5,10 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.uade.ecom.dto.UsuarioUpdateDTO;
+import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.EntidadEnUsoException;
 import com.uade.ecom.model.Usuario;
 import com.uade.ecom.repository.UsuarioRepository;
 import com.uade.ecom.util.SecurityUtils;
+import com.uade.ecom.util.Validaciones;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -31,6 +33,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = SecurityUtils.getUsuarioActual();
 
         if (StringUtils.hasText(usuarioUpdateDTO.getEmail()) && !usuarioUpdateDTO.getEmail().equals(usuario.getEmail())) {
+            if (!Validaciones.esEmailValido(usuarioUpdateDTO.getEmail())) {
+                throw new DatoInvalidoException("El email no es valido");
+            }
             usuarioRepository.findByEmail(usuarioUpdateDTO.getEmail())
                     .filter(otro -> !otro.getId().equals(usuario.getId()))
                     .ifPresent(otro -> {

@@ -15,7 +15,6 @@ import com.uade.ecom.dto.ItemFacturaDTO;
 import com.uade.ecom.dto.PedidoResponseDTO;
 import com.uade.ecom.dto.PedidoUpdateDTO;
 import com.uade.ecom.exception.AccesoDenegadoException;
-import com.uade.ecom.exception.PedidoNoEditableException;
 import com.uade.ecom.exception.PedidoVacioException;
 import com.uade.ecom.exception.ResourceNotFoundException;
 import com.uade.ecom.exception.TransicionEstadoInvalidaException;
@@ -137,27 +136,6 @@ public class PedidoServiceImpl implements PedidoService {
         restaurarStock(detallePedidoRepository.findByPedidoId(id));
         pedido.setEstado(ESTADO_CANCELADO);
         return toResponse(pedidoRepository.save(pedido));
-    }
-
-    /**
-     * Solo se borra un pedido CANCELADO: al cancelarlo ya se repuso el
-     * stock, asi que borrarlo no descuadra el inventario. Sus
-     * DetallePedido y su Pago apuntan al pedido, por eso se borran antes
-     * (si no, la base rechaza el DELETE por la clave foranea).
-     */
-    @Override
-    @Transactional
-    public void deletePedido(Long id) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun pedido con id " + id));
-        validarDueño(pedido);
-        if (!ESTADO_CANCELADO.equals(pedido.getEstado())) {
-            throw new PedidoNoEditableException("El pedido " + id + " esta " + pedido.getEstado()
-                    + ": solo se puede eliminar un pedido CANCELADO");
-        }
-        detallePedidoRepository.deleteAll(detallePedidoRepository.findByPedidoId(id));
-        pagoRepository.deleteAll(pagoRepository.findByPedidoId(id));
-        pedidoRepository.delete(pedido);
     }
 
     /**

@@ -17,4 +17,6 @@ public interface ItemCarritoRepository extends JpaRepository<ItemCarrito, Long> 
     List<ItemCarrito> findByCarritoIdAndProductoId(Long carritoId, Long productoId);
 
     List<ItemCarrito> findByVariante_Id(Long varianteId);
+
+    List<ItemCarrito> findByProductoId(Long productoId);
 }

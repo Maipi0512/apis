@@ -10,15 +10,19 @@ import com.uade.ecom.config.JwtService;
 import com.uade.ecom.dto.auth.AutenticacionResponseDTO;
 import com.uade.ecom.dto.auth.LoginRequestDTO;
 import com.uade.ecom.dto.auth.RegistroRequestDTO;
+import com.uade.ecom.exception.DatoInvalidoException;
 import com.uade.ecom.exception.EntidadEnUsoException;
 import com.uade.ecom.model.Carrito;
 import com.uade.ecom.model.Rol;
 import com.uade.ecom.model.Usuario;
 import com.uade.ecom.repository.CarritoRepository;
 import com.uade.ecom.repository.UsuarioRepository;
+import com.uade.ecom.util.Validaciones;
 
 @Service
 public class AutenticacionServiceImpl implements AutenticacionService {
+
+    private static final int PASSWORD_MINIMO = 8;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -37,6 +41,8 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
     @Override
     public AutenticacionResponseDTO registrar(RegistroRequestDTO registroRequestDTO) {
+        validarRegistro(registroRequestDTO);
+
         if (usuarioRepository.existsByEmail(registroRequestDTO.getEmail())) {
             throw new EntidadEnUsoException(
                     "Ya existe un usuario registrado con el email " + registroRequestDTO.getEmail());
@@ -76,5 +82,20 @@ public class AutenticacionServiceImpl implements AutenticacionService {
 
         String token = jwtService.generateToken(usuario);
         return new AutenticacionResponseDTO(token);
+    }
+
+    private void validarRegistro(RegistroRequestDTO dto) {
+        if (Validaciones.estaVacio(dto.getNombre())) {
+            throw new DatoInvalidoException("El nombre es obligatorio");
+        }
+        if (Validaciones.estaVacio(dto.getApellido())) {
+            throw new DatoInvalidoException("El apellido es obligatorio");
+        }
+        if (!Validaciones.esEmailValido(dto.getEmail())) {
+            throw new DatoInvalidoException("El email no es valido");
+        }
+        if (dto.getPassword() == null || dto.getPassword().length() < PASSWORD_MINIMO) {
+            throw new DatoInvalidoException("La contraseña tiene que tener al menos " + PASSWORD_MINIMO + " caracteres");
+        }
     }
 }

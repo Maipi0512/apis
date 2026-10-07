@@ -3,14 +3,11 @@ package com.uade.ecom.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uade.ecom.dto.PedidoResponseDTO;
@@ -55,9 +52,7 @@ public class PedidoController {
         return pedidoService.cancelarPedido(id);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deletePedido(@PathVariable Long id) {
-        pedidoService.deletePedido(id);
-    }
+    // No hay DELETE: un pedido no se borra nunca (baja logica). Queda
+    // guardado con estado CANCELADO, y asi lo siguen viendo el cliente y
+    // el admin.
 }

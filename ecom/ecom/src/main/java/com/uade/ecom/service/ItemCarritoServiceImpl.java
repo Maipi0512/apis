@@ -42,6 +42,9 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
     @Transactional
     public void agregar(ItemCarritoRequestDTO itemCarritoRequestDTO) {
         validarCantidad(itemCarritoRequestDTO.getCantidad());
+        if (itemCarritoRequestDTO.getProductoId() == null) {
+            throw new DatoInvalidoException("Hay que indicar que producto se agrega (productoId)");
+        }
 
         Carrito carrito = getMiCarrito();
         Producto producto = productoRepository.findById(itemCarritoRequestDTO.getProductoId())
@@ -62,8 +65,13 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
             return;
         }
 
-        int cantidadActual = lineas.stream().mapToInt(ItemCarrito::getCantidad).sum();
-        guardarEnUnaLinea(lineas, cantidadActual + itemCarritoRequestDTO.getCantidad());
+        // Se suma en long y se valida contra el stock ANTES de guardar: con
+        // int, lo que ya habia + una cantidad enorme "da la vuelta" y queda
+        // negativo, y un negativo pasaba el control de stock.
+        long cantidadActual = lineas.stream().mapToLong(ItemCarrito::getCantidad).sum();
+        long cantidadTotal = cantidadActual + itemCarritoRequestDTO.getCantidad();
+        validarStock(producto, variante, cantidadTotal);
+        guardarEnUnaLinea(lineas, (int) cantidadTotal);
     }
 
     @Override
@@ -158,7 +166,7 @@ public class ItemCarritoServiceImpl implements ItemCarritoService {
      * carrito muestre cantidades que de entrada ya sabemos que no se van
      * a poder comprar. Con variantes, cuenta el stock de la elegida.
      */
-    private void validarStock(Producto producto, VarianteProducto variante, int cantidad) {
+    private void validarStock(Producto producto, VarianteProducto variante, long cantidad) {
         int disponible = producto.stockDisponible(variante);
         if (cantidad > disponible) {
             throw new StockInsuficienteException(
