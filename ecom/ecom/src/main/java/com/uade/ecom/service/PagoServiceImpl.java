@@ -63,6 +63,14 @@ public class PagoServiceImpl implements PagoService {
                         "Metodo de pago invalido: '" + recibido + "'. Opciones: "
                                 + Arrays.toString(MetodoPago.values())));
 
+        // La direccion es opcional al registrarse, pero para comprar hace
+        // falta: sin direccion no hay a donde mandar el pedido.
+        Usuario usuario = SecurityUtils.getUsuarioActual();
+        if (usuario.getDireccion() == null || usuario.getDireccion().isBlank()) {
+            throw new DatoInvalidoException(
+                    "Falta la direccion de envio: cargala en Mi cuenta antes de pagar");
+        }
+
         // Todo en la misma transaccion: si falla el pago, no queda un
         // pedido creado ni stock descontado.
         Pedido pedido = carritoService.crearPedidoPagado();
