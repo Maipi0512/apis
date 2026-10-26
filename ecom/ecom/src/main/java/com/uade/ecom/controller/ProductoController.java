@@ -32,12 +32,21 @@ public class ProductoController {
 
     @GetMapping
     public List<Producto> getAllProductos() {
+        return productoService.getAllProductos().stream().filter(Producto::isActivo).toList();
+    }
+
+    @GetMapping("/admin")
+    public List<Producto> getProductosAdmin() {
         return productoService.getAllProductos();
     }
 
     @GetMapping("/{id}")
     public Producto getProductoById(@PathVariable Long id) {
-        return productoService.getProductoById(id);
+        Producto producto = productoService.getProductoById(id);
+        if (!producto.isActivo()) {
+            throw new com.uade.ecom.exception.ResourceNotFoundException("El producto no esta disponible");
+        }
+        return producto;
     }
 
     @PostMapping

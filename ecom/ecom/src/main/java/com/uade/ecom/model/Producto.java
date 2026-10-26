@@ -59,6 +59,9 @@ public class Producto {
     @Column(name = "stock", nullable = false)
     private Integer stock;
 
+    @Column(name = "activo", nullable = false, columnDefinition = "boolean default true")
+    private boolean activo = true;
+
     // Variaciones (por color, por numero o ambos), cada una con su stock.
     // Viajan en el JSON de /productos para que el front pueda mostrar el
     // selector de color/numero.
@@ -135,7 +138,7 @@ public class Producto {
      * si el producto tiene variantes, el del producto si no.
      */
     public int stockDisponible(VarianteProducto variante) {
-        return variante != null ? variante.getStock() : stock;
+        return activo ? (variante != null ? variante.getStock() : stock) : 0;
     }
 
     /**

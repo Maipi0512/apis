@@ -83,6 +83,9 @@ public class ProductoServiceImpl implements ProductoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No se encontro ninguna categoria con id " + productoRequestDTO.getCategoriaId()));
 
+        if (productoRequestDTO.getActivo() != null) {
+            producto.setActivo(productoRequestDTO.getActivo());
+        }
         producto.setNombre(productoRequestDTO.getNombre());
         producto.setPrecio(productoRequestDTO.getPrecio());
         // Con variantes, el stock del producto es la suma de las variantes
@@ -237,16 +240,9 @@ public class ProductoServiceImpl implements ProductoService {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontro ningun producto con id " + id));
 
-        if (detallePedidoRepository.existsByProductoId(id)) {
-            throw new EntidadEnUsoException(
-                    "No se puede eliminar el producto " + id + " porque tiene pedidos asociados");
-        }
-
-        // Si solo esta en carritos (nadie lo compro), se saca de esos
-        // carritos: si no, la base rechaza el borrado por la clave foranea.
-        itemCarritoRepository.deleteAll(itemCarritoRepository.findByProductoId(id));
-
-        productoRepository.delete(producto);
+        // Baja logica: se conservan stock, variantes, imagen y pedidos historicos.
+        producto.setActivo(false);
+        productoRepository.save(producto);
     }
 
     @Override

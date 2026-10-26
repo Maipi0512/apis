@@ -63,6 +63,7 @@ public class SeguridadConfig {
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/productos/admin").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/categorias/**", "/productos/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST, "/categorias/**", "/productos/**")

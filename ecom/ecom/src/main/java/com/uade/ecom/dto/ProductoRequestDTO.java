@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductoRequestDTO {
 
+    private Boolean activo;
     private String nombre;
     private BigDecimal precio;
     private Integer stock;
